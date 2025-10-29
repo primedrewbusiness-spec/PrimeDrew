@@ -18,3 +18,10 @@ instance/
 
 # Environment variables
 .env
+
+# .gitignore फ़ाइल में इसे जोड़ें
+.env
+.venv/
+__pycache__/
+*.pyc
+serviceAccountKey.json

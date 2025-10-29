@@ -7,7 +7,7 @@ from functools import wraps
 import firebase_admin
 from firebase_admin import credentials, auth
 import os
-import json
+import json # <<< CRITICAL IMPORT FOR JSON.LOADS
 import secrets
 from datetime import datetime, timedelta
 import math
@@ -17,10 +17,11 @@ from twilio.rest import Client
 import logging
 import random
 import requests
-from dotenv import load_dotenv  # <<< CRITICAL NEW IMPORT
+from dotenv import load_dotenv # <<< CRITICAL NEW IMPORT
+from sqlalchemy import inspect # <<< CRITICAL IMPORT FOR DB CHECK
 
 # Load environment variables from .env file (must be at the top)
-load_dotenv()  # <<< CRITICAL NEW FUNCTION CALL
+load_dotenv() # <<< CRITICAL NEW FUNCTION CALL
 
 # === CUSTOM JINJA FILTER ===
 def datetime_format(value, format_string):
@@ -123,18 +124,26 @@ db = SQLAlchemy(app)
 app.jinja_env.filters['to_datetime'] = datetime_format
 app.jinja_env.filters['split_date'] = split_date
 
-# Firebase Admin SDK Initialization (kept for completeness)
+# Firebase Admin SDK Initialization (UPDATED FOR RENDER/ENV VARIABLE)
 FIREBASE_PROJECT_ID = 'vehicle-rent-50cc6'
+FIREBASE_SERVICE_ACCOUNT_KEY_JSON = os.environ.get('FIREBASE_SERVICE_ACCOUNT_KEY')
+
 try:
-    # serviceAccountKey.json is in .gitignore, so it will only load locally
-    if os.path.exists("serviceAccountKey.json"):
+    if FIREBASE_SERVICE_ACCOUNT_KEY_JSON:
+        # Load from Environment Variable (for Render/Production)
+        cred_json = json.loads(FIREBASE_SERVICE_ACCOUNT_KEY_JSON)
+        cred = credentials.Certificate(cred_json)
+        firebase_admin.initialize_app(cred, {'projectId': FIREBASE_PROJECT_ID})
+        print("✅ Firebase Admin SDK initialized from Environment Variable.")
+    elif os.path.exists("serviceAccountKey.json"):
+        # Load from local file (for local development only, since .gitignore will skip it)
         cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred, {'projectId': FIREBASE_PROJECT_ID})
-        print("Firebase Admin SDK initialized successfully.")
+        print("✅ Firebase Admin SDK initialized successfully from local file.")
     else:
-        print("WARNING: serviceAccountKey.json not found. Firebase Admin SDK skipped.")
+        print("⚠️ WARNING: Firebase Service Account Key not found (neither in ENV nor local file). Firebase Admin SDK skipped.")
 except Exception as e:
-    print(f"WARNING: Firebase Admin SDK failed to initialize. Error: {e}")
+    print(f"❌ WARNING: Firebase Admin SDK failed to initialize. Error: {e}")
 
 # ==================================================
 # === DATABASE MODELS ===
@@ -285,6 +294,81 @@ class Complaint(db.Model):
 # ---------------------------------------------
 
 # ==================================
+# === ADMIN CREATION UTILITY (DB-BASED) ===
+# ==================================
+
+def create_admin_user(admin_email, admin_phone, admin_password):
+    """Creates or updates a Super Admin user in the database."""
+    # Check if an admin user with this email already exists
+    user = User.query.filter_by(email=admin_email).first()
+    
+    # 1. Generate the secure hash for the password
+    hashed_password = generate_password_hash(admin_password)
+
+    if user:
+        # Update existing user to be super_admin and set statuses
+        if user.role != 'super_admin':
+            user.role = 'super_admin'
+        user.password = hashed_password
+        user.is_approved_host = True
+        user.is_active = True # Admin must be active
+        db.session.commit()
+        print(f"✅ Existing user '{admin_email}' updated to Super Admin with new password.")
+        
+    else:
+        # Create a new super_admin user
+        new_admin = User(
+            firebase_uid=secrets.token_hex(16), # Placeholder UID
+            phone=admin_phone,
+            email=admin_email,
+            password=hashed_password,
+            first_name="Super",
+            last_name="Admin",
+            dob="2000-01-01",
+            role='super_admin',
+            address1="Admin HQ",
+            address2=None,
+            city="Global",
+            state="State",
+            pincode="000000",
+            identity_doc="Aadhar",
+            dl_number="ADMN12345",
+            dl_expiry="2030-01-01",
+            terms_agreed=True,
+            is_approved_host=True,
+            is_active=True # Admin must be active
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+        print(f"✅ New Super Admin user '{admin_email}' created successfully.")
+
+
+# =========================================================================
+# === CRITICAL DATABASE INITIALIZATION FIX FOR RENDER FREE TIER ===
+# =========================================================================
+from sqlalchemy import inspect # Import inspect here for use below
+
+with app.app_context():
+    try:
+        # This will create tables if they don't exist (and only works once).
+        db.create_all()
+        print("✅ Database tables checked/created at application startup.")
+        
+        # --- Create Admin User (Only needed once) ---
+        # Check if the 'user' table is even there before querying it and if no super_admin exists
+        # NOTE: inspect(db.engine).has_table('user') is a safeguard, but User.query.first() may fail before table creation.
+        # We rely on db.create_all() first, then run admin creation logic.
+        if User.query.filter_by(role='super_admin').count() == 0:
+             create_admin_user("admin@primedrew.com", "9999999999", "adminpass")
+             print("✅ Super Admin created/verified.")
+        # -------------------------------------------
+    except Exception as e:
+        # This will catch errors related to connecting to the DB/bad URL.
+        print(f"❌ CRITICAL DATABASE ERROR at startup: {e}")
+# =========================================================================
+
+
+# ==================================
 # === AUTH & UTILITY FUNCTIONS ===
 # ==================================
 
@@ -402,11 +486,11 @@ def host_required(f):
             
             # Redirect unapproved hosts to their regular dashboard
             if user.role == 'host':
-                                    return redirect(url_for('dashboard'))
+                return redirect(url_for('dashboard'))
             return redirect(url_for('dashboard'))
             
         if not user:
-                                    # Safety check, should be covered by login_required
+            # Safety check, should be covered by login_required
             flash("❌ User session invalid. Please log in again.", 'error')
             session.clear()
             return redirect(url_for('login'))
@@ -502,7 +586,7 @@ def price_for_server(base_price_per_hour, fuel_type, start_date_str_iso, end_dat
     elif total_hours >= 96: 
         subtotal *= 0.85 # 15% discount 
     # -----------------------------------------
-        
+    
     return round(subtotal)
 # -----------------------------------------------------------
 
@@ -2064,67 +2148,18 @@ def cancel_booking(booking_id):
 
 
 # ==================================
-# === ADMIN CREATION UTILITY (DB-BASED) ===
-# ==================================
-
-def create_admin_user(admin_email, admin_phone, admin_password):
-    """Creates or updates a Super Admin user in the database."""
-    # Check if an admin user with this email already exists
-    user = User.query.filter_by(email=admin_email).first()
-    
-    # 1. Generate the secure hash for the password
-    hashed_password = generate_password_hash(admin_password)
-
-    if user:
-        # Update existing user to be super_admin and set statuses
-        if user.role != 'super_admin':
-            user.role = 'super_admin'
-        user.password = hashed_password
-        user.is_approved_host = True
-        user.is_active = True # Admin must be active
-        db.session.commit()
-        print(f"✅ Existing user '{admin_email}' updated to Super Admin with new password.")
-        
-    else:
-        # Create a new super_admin user
-        new_admin = User(
-            firebase_uid=secrets.token_hex(16), # Placeholder UID
-            phone=admin_phone,
-            email=admin_email,
-            password=hashed_password,
-            first_name="Super",
-            last_name="Admin",
-            dob="2000-01-01",
-            role='super_admin',
-            address1="Admin HQ",
-            address2=None,
-            city="Global",
-            state="State",
-            pincode="000000",
-            identity_doc="Aadhar",
-            dl_number="ADMN12345",
-            dl_expiry="2030-01-01",
-            terms_agreed=True,
-            is_approved_host=True,
-            is_active=True # Admin must be active
-        )
-        db.session.add(new_admin)
-        db.session.commit()
-        print(f"✅ New Super Admin user '{admin_email}' created successfully.")
-
-# ==================================
-# === MAIN RUN ===
+# === MAIN RUN (LOCAL ONLY) ===
 # ==================================
 
 if __name__ == '__main__':
+    # When running locally, this block executes, ensuring local SQLite setup and admin creation runs.
+    # On Render, the logic in the 'CRITICAL DATABASE INITIALIZATION FIX' block handles setup.
     with app.app_context():
-        # --- CRITICAL STEP: DELETE 'project_data.db' BEFORE RUNNING THIS BLOCK FOR SCHEMA CHANGES ---
-        print("Creating all database tables...")
+        # NOTE: db.create_all() will run again, but SQLAlchemy safely skips creating existing tables.
+        print("Creating all database tables (Local Fallback)...")
         db.create_all() 
         
-        # # --- Create Admin User (Use these credentials to log in) ---
-        print("Creating/Updating Super Admin...")
+        print("Creating/Updating Super Admin (Local Fallback)...")
         create_admin_user("admin@primedrew.com", "9999999999", "adminpass")
-        # # -----------------------------------------------------------
             
     app.run(debug=True, port=5000)
