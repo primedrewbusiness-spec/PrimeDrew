@@ -1,0 +1,20 @@
+# Ignore Database
+project_data.db
+
+# Ignore Secret/Credential files (CRITICAL)
+serviceAccountKey.json
+
+# Ignore IDE/Editor-specific files
+.vscode/
+
+# Ignore Python generated files
+_pycache_/
+*.pyc
+instance/
+
+# .gitignore
+
+# ... other ignores (e.g., venv/, __pycache__/)
+
+# Environment variables
+.env

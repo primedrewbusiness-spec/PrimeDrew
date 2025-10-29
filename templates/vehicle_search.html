@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PrimeDrew | Advanced Ride Finder</title>
+    <meta name="description" content="Complex, feature-rich vehicle search interface with dynamic filtering." />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='vehicle_search_styles.css') }}" />
+    <link rel="icon" href="{{ url_for('static', filename='images/pd-logo.png') }}">
+    
+    <style>
+        .card-spec {
+            font-size: 0.85em;
+            color: #555;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #eee;
+        }
+        .card-spec i {
+            margin-right: 6px;
+            color: #007bff;
+        }
+    </style>
+    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap">
+    </script>
+    </head>
+<body>
+
+<header class="site-header">
+    <div class="logo-group">
+        <div class="pd-logo"><img src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}" alt="PrimeDrew Logo" id="imglogo"></div>
+        <div class="logo-name">PrimeDrew</div>
+    </div>
+    
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" />
+    <label for="nav-toggle" class="hamburger" aria-label="Toggle navigation" role="button" tabindex="0">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </label>
+
+    <nav class="nav" aria-label="Primary">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            
+            {% if session.get('logged_in') and session.get('user_role', '') == 'rider' %}
+            <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+            {% endif %}
+            
+            {% if session.get('logged_in') and session.get('user_role', '') == 'host' %}
+            <li><a href="{{ url_for('host_dashboard') }}">Host Dashboard</a></li>
+            {% elif session.get('logged_in') %}
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>
+
+<main class="main-content">
+    
+    <section class="compact-search-bar" aria-label="Quick Search and Dates">
+        <div class="search-field-group">
+            <i class="fas fa-search"></i>
+            <input id="q" class="search-input" placeholder="Search by model, brand, or feature..." />
+        </div>
+        <div class="date-select-group">
+            <i class="far fa-calendar-alt"></i>
+            <input id="start" class="date-input" type="datetime-local" title="Start Date and Time" /> 
+            <span class="separator">→</span>
+            <input id="end" class="date-input" type="datetime-local" title="End Date and Time" /> 
+        </div>
+        <select id="city" class="city-select" aria-label="City">
+            <option value="">All Cities</option>
+            <option>Pune</option>
+            <option>Mumbai</option>
+            <option>Bengaluru</option>
+            <option>Hyderabad</option>
+            <option>Delhi</option>
+        </select>
+        <select id="subCity" class="city-select" aria-label="Sub-City / Area" style="display: none;">
+            <option value="">All Areas</option>
+        </select>
+        <button id="toggleFilterBtn" class="filter-toggle-btn btn-secondary">
+            <i class="fas fa-sliders-h"></i> 
+            <span class="toggle-text">Filters</span>
+        </button>
+    </section>
+    
+    <section class="map-container" id="mapSection">
+        <div id="vehicleMap" style="height: 400px; width: 100%; border-radius: 8px; margin-bottom: 20px;"></div>
+    </section>
+    <section class="layout-grid">
+        
+        <aside class="sidebar-filters hidden-mobile" id="filtersPanel" aria-label="Advanced Filter Options">
+            <div class="filter-group">
+                <h5 class="filter-title">Vehicle Type</h5>
+                <div class="checkbox-list">
+                    <label><input type="checkbox" name="type" value="Scooter" checked> Scooter</label>
+                    <label><input type="checkbox" name="type" value="Bike"> Bike</label>
+                    <label><input type="checkbox" name="type" value="Car"> Car </label>
+                </div>
+            </div>
+
+            <div class="filter-group" id="brandSection">
+                <h5 class="filter-title">Brand</h5>
+                <div class="checkbox-list column-2" id="brandList">
+                    </div>
+            </div>
+            
+            <div class="filter-group">
+                <h5 class="filter-title">Price Range: Max ₹/hr <strong id="priceVal" class="price-display">50</strong></h5>
+                <input id="price" type="range" min="10" max="500" step="10" value="500"/>
+            </div>
+
+            <div class="filter-group">
+                <h5 class="filter-title">Powertrain</h5>
+                <div class="checkbox-list column-2">
+                    <label><input type="checkbox" name="fuel" value="Petrol" checked> Petrol</label>
+                    <label><input type="checkbox" name="fuel" value="Electric" checked> Electric</label>
+                    <label><input type="checkbox" name="fuel" value="Diesel" checked> Diesel</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h5 class="filter-title">Transmission</h5>
+                <div class="checkbox-list column-2">
+                    <label><input type="checkbox" name="gear" value="CVT" checked> Automatic (CVT)</label>
+                    <label><input type="checkbox" name="gear" value="Manual" checked> Manual</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h5 class="filter-title">Premium Features</h5>
+                <div class="checkbox-list column-2">
+                    <label><input type="checkbox" name="feat" value="Helmet"> Free Helmet</label>
+                    <label><input type="checkbox" name="feat" value="Doorstep"> Doorstep Delivery</label>
+                    <label><input type="checkbox" name="feat" value="Unlimited"> Unlimited KMs</label>
+                    <label><input type="checkbox" name="feat" value="QuickID"> Quick KYC</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h5 class="filter-title">Min Rating: <strong id="minRatingVal">0.0</strong> <i class="fas fa-star text-gold"></i></h5>
+                <input id="minRating" type="range" min="0" max="5" step="0.1" value="0" />
+            </div>
+
+            <div class="filter-actions-sticky">
+                <button class="btn-clear" id="btnReset"><i class="fas fa-undo"></i> Reset Filters</button>
+                <button class="btn-primary" id="btnApply"><i class="fas fa-check"></i> Apply</button>
+            </div>
+        </aside>
+
+        <section class="results-main">
+            <div class="toolbar">
+                <div class="summary-pills" id="activeFilters"></div>
+                <div class="sort-controls">
+                    <select id="sort" class="sort-select">
+                        <option value="relevance">Sort by: Recommended</option>
+                        <option value="priceAsc">Price: Low to High</option>
+                        <option value="priceDesc">Price: High to Low</option>
+                        <option value="ratingDesc">Rating: High to Low</option>
+                    </select>
+                    <button class="btn-icon" id="toggleView" aria-label="Toggle View"><i class="fas fa-list"></i></button>
+                    <button class="btn-icon" id="btnFavorites" aria-label="View Favorites"><i class="far fa-heart"></i></button>
+                    <button class="btn-icon" id="btnCart" aria-label="View Bookings"><i class="fas fa-shopping-cart"></i></button>
+                </div>
+            </div>
+
+            <div id="grid" class="result-container grid-view" aria-live="polite" aria-busy="false">
+                    </div>
+            <div class="pager" id="pager"></div>
+        </section>
+    </section>
+</main>
+
+<dialog id="modal" class="custom-modal"></dialog>
+
+<script>
+    // ---------------------------------------------------------------------
+    // ALL JAVASCRIPT LOGIC (CRITICALLY MODIFIED FOR GOOGLE MAPS MARKERS)
+    // ---------------------------------------------------------------------
+
+    // ---------- DATA & UTILITIES ----------
+    const todayStr = new Date().toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+    const oneHour = 60 * 60 * 1000;
+    const el = id => document.getElementById(id);
+    const qs = (sel, root = document) => root.querySelector(sel);
+    const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const formatINR = n => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
+
+    // DYNAMIC INVENTORY LOADING: Flask will insert the combined inventory data here.
+    const INVENTORY = JSON.parse('{{ inventory_json | safe }}');
+    // MODIFIED: Get sub-city map from Flask
+    const SUB_CITY_MAP = JSON.parse('{{ sub_city_map_json | safe }}');
+
+    const BRANDS = [...new Set(INVENTORY.map(x => x.brand))].sort();
+
+    // MODIFIED: State updated with subCity
+    const state = {
+        q: '', city: '', subCity: '', start: '', end: '', maxPrice: 500, types: new Set(['Scooter', 'Bike', 'Car']), fuels: new Set(['Petrol', 'Electric', 'Diesel']), gears: new Set(['CVT', 'Manual']), brands: new Set(), feats: new Set(), minRating: 0, sort: 'relevance', page: 1, perPage: 9, view: 'grid'
+    };
+    
+    // 🛑 NEW: Google Maps Variables
+    let vehicleMap;
+    let mapMarkers = [];
+    let infoWindow;
+    const DEFAULT_LAT_LNG = { lat: 20.5937, lng: 78.9629 }; // Center of India (fallback)
+    const DEFAULT_ZOOM = 5;
+
+    // ---------- GOOGLE MAPS FUNCTIONS (NEW/MODIFIED for ACCURACY) ----------
+    window.initMap = function() {
+        // This function is called by the Google Maps script URL
+        vehicleMap = new google.maps.Map(el('vehicleMap'), {
+            center: DEFAULT_LAT_LNG,
+            zoom: DEFAULT_ZOOM,
+            mapTypeId: 'roadmap'
+        });
+        
+        infoWindow = new google.maps.InfoWindow();
+
+        // Start the main app logic after the map is loaded
+        init();
+    }
+
+    function updateMapMarkers(vehicles) {
+        // Clear previous markers
+        mapMarkers.forEach(marker => marker.setMap(null));
+        mapMarkers = [];
+        
+        if (!vehicleMap) return;
+        
+        const bounds = new google.maps.LatLngBounds();
+        let hasMarkers = false;
+
+        // Filter vehicles that have valid coordinates for map interaction (lat/lng are now precise)
+        const geolocatedVehicles = vehicles.filter(item => item.lat && item.lng);
+
+        geolocatedVehicles.forEach(item => {
+            const effectivePrice = formatINR(item.effPrice);
+            const locationText = item.sub_city ? `${item.sub_city}, ${item.city}` : item.city;
+            
+            // CRITICAL: Ensure lat/lng are treated as numbers (necessary for map functions)
+            const position = { lat: parseFloat(item.lat), lng: parseFloat(item.lng) };
+
+            // Create the marker
+            const marker = new google.maps.Marker({
+                position: position,
+                map: vehicleMap,
+                title: `${item.name} (${item.brand})`,
+            });
+            
+            // Content for the InfoWindow (Popup)
+            const popupContent = `
+                <div style="font-family: Roboto, Arial, sans-serif; font-size: 14px; padding: 5px;">
+                    <p style="margin: 0 0 5px 0;"><b>${item.name}</b> by ${item.brand}</p>
+                    <p style="margin: 0 0 5px 0;">📍 ${locationText}</p>
+                    <p style="margin: 0 0 10px 0; font-weight: bold; color: #3b82f6;">${effectivePrice} / avg hr</p>
+                    <button 
+                        class="btn-primary" 
+                        style="padding: 5px 10px; font-size: 12px; border: none; border-radius: 4px; background-color: #3b82f6; color: white; cursor: pointer;"
+                        onclick="document.getElementById('grid').querySelector('[data-id=\\'${item.id}\\'] .book-btn').click()"
+                        aria-label="Book ${item.name}"
+                    >
+                        Book Now
+                    </button>
+                </div>
+            `;
+
+            // Add listener to open InfoWindow on click
+            marker.addListener("click", () => {
+                infoWindow.setContent(popupContent);
+                infoWindow.open(vehicleMap, marker);
+            });
+            
+            mapMarkers.push(marker);
+            bounds.extend(position);
+            hasMarkers = true;
+        });
+
+        // Fit map bounds to the markers or reset view if no markers
+        if (hasMarkers) {
+            vehicleMap.fitBounds(bounds);
+            // Optionally set a maximum zoom level if only one marker is visible
+            if (geolocatedVehicles.length === 1) {
+                 vehicleMap.setZoom(12);
+            }
+        } else {
+            // No results or no coordinates, reset to default view
+            vehicleMap.setCenter(DEFAULT_LAT_LNG);
+            vehicleMap.setZoom(DEFAULT_ZOOM);
+        }
+    }
+    // ------------------------------------------
+
+    // ---------- INIT & EVENT LISTENERS ----------
+    function init() {
+        // NOTE: init() is now called from window.initMap() after the Google Map is loaded
+
+        const brandHTML = BRANDS.map(b => `<label><input type="checkbox" name="brand" value="${b}"> ${b}</label>`).join('');
+        el('brandList').innerHTML = brandHTML;
+
+        // Set min for datetime-local
+        el('start').min = todayStr; el('end').min = todayStr;
+
+        el('toggleFilterBtn').addEventListener('click', toggleFilters);
+
+        el('q').addEventListener('input', debounce(e => { state.q = e.target.value.trim(); syncAndRender(); }, 250));
+        
+        // MODIFIED: City change handler
+        el('city').addEventListener('change', e => { 
+            state.city = e.target.value; 
+            state.subCity = ''; // Reset sub-city when main city changes
+            updateSubCityDropdown();
+            syncAndRender(); 
+        });
+
+        // MODIFIED: Added event listener for subCity
+        el('subCity').addEventListener('change', e => {
+            state.subCity = e.target.value;
+            syncAndRender();
+        });
+        
+        // Changed price display to /hr
+        el('price').addEventListener('input', e => { state.maxPrice = +e.target.value; el('priceVal').textContent = `Max ₹${state.maxPrice}/hr`; });
+        el('price').addEventListener('change', () => syncAndRender());
+
+        qsa('input[name="type"]').forEach(cb => cb.addEventListener('change', () => updateSetFromChecks('type', state.types)));
+        qsa('input[name="fuel"]').forEach(cb => cb.addEventListener('change', () => updateSetFromChecks('fuel', state.fuels)));
+        qsa('input[name="gear"]').forEach(cb => cb.addEventListener('change', () => updateSetFromChecks('gear', state.gears)));
+        qsa('input[name="brand"]').forEach(cb => cb.addEventListener('change', () => updateSetFromChecks('brand', state.brands)));
+        qsa('input[name="feat"]').forEach(cb => cb.addEventListener('change', () => updateSetFromChecks('feat', state.feats)));
+
+        el('minRating').addEventListener('input', e => { state.minRating = +e.target.value; el('minRatingVal').textContent = state.minRating.toFixed(1); });
+        el('minRating').addEventListener('change', () => syncAndRender());
+
+        el('start').addEventListener('change', onDateChange);
+        el('end').addEventListener('change', onDateChange);
+
+        el('sort').addEventListener('change', e => { state.sort = e.target.value; syncAndRender(); });
+        el('btnReset').addEventListener('click', resetAll);
+        el('btnApply').addEventListener('click', () => { 
+            if (window.innerWidth <= 980) toggleFilters(); 
+            syncAndRender(); 
+        });
+
+        el('toggleView').addEventListener('click', () => { 
+            state.view = state.view === 'grid' ? 'list' : 'grid'; 
+            renderGrid(lastResult.filtered); 
+        });
+
+        el('btnFavorites').addEventListener('click', showFavorites);
+        el('btnCart').addEventListener('click', showCart);
+
+        restoreFromURL();
+        updateSubCityDropdown(); // Update dropdown on initial load
+
+        // Initial Price Slider setup
+        el('priceVal').textContent = `Max ₹${state.maxPrice}/hr`;
+        el('minRatingVal').textContent = state.minRating.toFixed(1);
+        syncAndRender();
+    }
+
+    // MODIFIED: New function to manage sub-city dropdown
+    function updateSubCityDropdown() {
+        const subCitySelect = el('subCity');
+        const selectedCity = state.city;
+        const subCities = SUB_CITY_MAP[selectedCity];
+
+        subCitySelect.innerHTML = '<option value="">All Areas</option>'; // Reset
+
+        if (subCities && subCities.length > 0) {
+            subCities.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub;
+                option.textContent = sub;
+                subCitySelect.appendChild(option);
+            });
+            subCitySelect.style.display = 'inline-block';
+        } else {
+            subCitySelect.style.display = 'none';
+        }
+        subCitySelect.value = state.subCity; // Restore previous selection if any
+    }
+
+    function toggleFilters() {
+        const panel = el('filtersPanel');
+        const btn = el('toggleFilterBtn');
+        const isHidden = panel.classList.contains('hidden-mobile');
+
+        if (isHidden) {
+            panel.classList.remove('hidden-mobile');
+            btn.classList.add('active');
+        } else {
+            panel.classList.add('hidden-mobile');
+            btn.classList.remove('active');
+        }
+    }
+
+    function updateSetFromChecks(name, set) {
+        set.clear();
+        qsa(`input[name="${name}"]:checked`).forEach(cb => set.add(cb.value));
+    }
+
+    function onDateChange() {
+        const s = el('start').value, e = el('end').value;
+        if (s && e && new Date(e) < new Date(s)) { el('end').value = s; }
+        state.start = el('start').value; state.end = el('end').value; syncAndRender();
+    }
+
+    // MODIFIED: resetAll updated for subCity
+    function resetAll() {
+        state.q = ''; state.city = ''; state.subCity = ''; state.start = ''; state.end = ''; state.maxPrice = 500; state.types = new Set(['Scooter', 'Bike', 'Car']); state.fuels = new Set(['Petrol', 'Electric', 'Diesel']); state.gears = new Set(['CVT', 'Manual']); state.brands = new Set(); state.feats = new Set(); state.minRating = 0; state.sort = 'relevance'; state.page = 1; state.view = 'grid';
+        el('q').value = ''; el('city').value = ''; el('subCity').value = ''; el('start').value = ''; el('end').value = ''; el('price').value = 500; el('priceVal').textContent = `Max ₹500/hr`; el('minRating').value = 0; el('minRatingVal').textContent = '0.0';
+        qsa('input[name="type"]').forEach((cb) => cb.checked = ['Scooter', 'Bike', 'Car'].includes(cb.value));
+        qsa('input[name="fuel"]').forEach(cb => cb.checked = true);
+        qsa('input[name="gear"]').forEach(cb => cb.checked = true);
+        qsa('input[name="brand"]').forEach(cb => cb.checked = false);
+        qsa('input[name="feat"]').forEach(cb => cb.checked = false);
+        updateSubCityDropdown();
+        syncAndRender();
+    }
+
+    // ---------- FILTERING & SORT (MODIFIED) ----------
+    
+    function withinDate(item) {
+        if (!state.start || !state.end) return true;
+        
+        const s = new Date(state.start);
+        const e = new Date(state.end);
+        if (s >= e) return true;
+        
+        // Uses the real booked data fetched from the Booking table
+        return !item.booked.some(([bs_str, be_str]) => {
+            // Booked dates are YYYY-MM-DD HH:MM
+            const bs = new Date(bs_str.replace(' ', 'T'));
+            const be = new Date(be_str.replace(' ', 'T'));
+            
+            // Overlap logic: start1 < end2 AND start2 < end1
+            return s < be && bs < e;
+        });
+    }
+    
+    // --- NEW: Dynamic Deposit Calculation (Client-side sync) ---
+    function calculateDepositClient(subtotal, total_hours) {
+        if (total_hours < 24) return 500;
+        if (total_hours >= 24 && total_hours < 72) return 1500;
+        
+        if (total_hours >= 72) {
+            const deposit_calc = 2000 + (subtotal * 0.10);
+            // Round to nearest 100, max 5000
+            return Math.min(Math.round(deposit_calc / 100) * 100, 5000); 
+        }
+        return 500;
+    }
+    // -----------------------------------------------------------
+
+    // UPDATED: This function now calculates the total subtotal first, then returns the average price for DISPLAY (PER HOUR).
+    // NOTE: This logic *already* implements the price decrease (discount) for long-term rentals.
+    function priceFor(item) {
+        const base = item.base; // Price per hour
+        
+        if (!state.start || !state.end) return base; // Return base price/hour if no dates selected.
+        
+        let s = new Date(state.start), e = new Date(state.end);
+        if (s >= e) return base;
+        
+        const total_seconds = (e - s) / 1000;
+        const total_hours = total_seconds / 3600;
+        
+        // For bookings less than 24 hours, bill the nearest integer hour (ceil)
+        const billed_hours = total_hours < 24 ? Math.ceil(total_hours) : total_hours;
+
+        let total = billed_hours * base; // Initial subtotal
+
+        // Apply Fuel Surcharge/Discount
+        if (item.fuel === 'Electric') total *= 0.95; 
+        else if (item.fuel === 'Diesel') total *= 1.05; 
+        
+        // --- CRITICAL CHANGE: NEW Long-term Discount Logic (This is the section that gives a discount) ---
+        if (total_hours >= 48 && total_hours < 96) total *= 0.95; // 5% off for 2-4 days
+        else if (total_hours >= 96) total *= 0.85; // 15% off for 4+ days
+        // ----------------------------------------------------
+        
+        // Return the average price per billed hour for card display
+        const avg_hourly = Math.round(total / billed_hours);
+        
+        return avg_hourly;
+    }
+
+    function textScore(item) {
+        const q = state.q.toLowerCase(); if (!q) return 1;
+        const hay = `${item.name} ${item.brand} ${item.city} ${item.sub_city || ''} ${item.type} ${item.fuel} ${item.features.join(' ')}`.toLowerCase();
+        if (hay.includes(q)) return 1.2;
+        return 1;
+    }
+
+    let lastResult = { filtered: [], paged: [] };
+
+    // 🛑 CRITICAL CHANGE: Removed '&& withinDate(it)' to keep booked vehicles visible
+    function compute() {
+        updateSetFromChecks('brand', state.brands);
+        updateSetFromChecks('type', state.types);
+        updateSetFromChecks('fuel', state.fuels);
+        updateSetFromChecks('gear', state.gears);
+        updateSetFromChecks('feat', state.feats);
+
+        const out = INVENTORY.filter(it =>
+            (!state.city || it.city === state.city)
+            && (!state.subCity || it.sub_city === state.subCity)
+            && state.types.has(it.type)
+            && state.fuels.has(it.fuel)
+            && state.gears.has(it.gear)
+            && (state.brands.size === 0 || state.brands.has(it.brand))
+            && (state.feats.size === 0 || [...state.feats].every(f => it.features.includes(f)))
+            && it.rating >= state.minRating
+            && priceFor(it) <= state.maxPrice // Filtering by average price per hour
+            // && withinDate(it) <-- REMOVED THIS LINE
+        ).map(it => ({ ...it, effPrice: priceFor(it), score: textScore(it) })); // effPrice is now avg price per hour
+
+        out.sort((a, b) => {
+            switch (state.sort) {
+                case 'priceAsc': return a.effPrice - b.effPrice;
+                case 'priceDesc': return b.effPrice - a.effPrice;
+                case 'ratingDesc': return b.rating - a.rating;
+                default: return (b.score - a.score) || (b.rating - a.rating);
+            }
+        });
+
+        return out;
+    }
+
+    function paginate(arr) {
+        const pages = Math.max(1, Math.ceil(arr.length / state.perPage));
+        state.page = clamp(state.page, 1, pages);
+        const startIdx = (state.page - 1) * state.perPage;
+        return { pages, slice: arr.slice(startIdx, startIdx + state.perPage) };
+    }
+
+    // ---------- RENDER (MODIFIED) ----------
+    // MODIFIED: syncAndRender updated to include subCity in URL
+    function syncAndRender() {
+        const params = new URLSearchParams();
+        Object.entries({ q: state.q, city: state.city, subCity: state.subCity, start: state.start, end: state.end, price: state.maxPrice, minRating: state.minRating, sort: state.sort }).forEach(([k, v]) => { if (v) params.set(k, v) });
+        history.replaceState({}, '', `${location.pathname}?${params.toString()}`);
+
+        const filtered = compute();
+        lastResult.filtered = filtered;
+        renderGrid(filtered);
+        renderFiltersSummary(filtered.length);
+    }
+
+    function renderGrid(filtered) {
+        const { pages, slice } = paginate(filtered);
+        const grid = el('grid'); grid.setAttribute('aria-busy', 'true');
+        grid.className = state.view === 'grid' ? 'result-container grid-view' : 'result-container list-view';
+
+        if (slice.length === 0) { grid.innerHTML = '<div class="no-results-card">No results match your filters. Try clearing some filters or changing dates.</div>'; el('pager').innerHTML = ''; grid.setAttribute('aria-busy', 'false'); }
+        else {
+             grid.innerHTML = slice.map(item => cardHTML(item)).join('');
+             qsa('.vehicle-card .fav-btn').forEach(btn => btn.addEventListener('click', toggleFav));
+             qsa('.vehicle-card .book-btn').forEach(btn => btn.addEventListener('click', openBooking));
+
+             const pager = el('pager');
+             pager.innerHTML = Array.from({ length: pages }, (_, i) => i + 1).map(i => `<button class="${i + 1 === state.page ? 'current-page' : ''}" data-page="${i + 1}">${i + 1}</button>`).join('');
+             qsa('#pager button').forEach(b => b.addEventListener('click', e => { state.page = +e.target.dataset.page; renderGrid(filtered); window.scrollTo({ top: 0, behavior: 'smooth' }) }));
+        }
+        
+        // 🛑 CRITICAL NEW LINE: Update map markers with the currently filtered/paged vehicles
+        if (typeof google !== 'undefined' && vehicleMap) {
+            updateMapMarkers(slice); 
+        }
+
+        grid.setAttribute('aria-busy', 'false');
+        el('toggleView').innerHTML = state.view === 'grid' ? '<i class="fas fa-list"></i>' : '<i class="fas fa-th-large"></i>';
+    }
+
+    // 🛑 CRITICAL CHANGE: Card HTML now uses withinDate for visual state and displays specification
+    function cardHTML(it) {
+        const favd = isFav(it.id);
+        const fuelBadge = (it.fuel === 'Electric' ? 'Electric ⚡' : (it.fuel === 'Diesel' ? 'Diesel ⛽' : 'Petrol ⛽'));
+        const badges = [fuelBadge, it.type, `${it.kms} km/unit`].map(x => `<span class="tag tag-base">${x}</span>`).join('');
+        const feats = it.features.map(x => `<span class="tag tag-feat">${x}</span>`).join('');
+        
+        const effectiveBasePrice = it.base; 
+        // This 'strike' logic ensures the discount is visible. effPrice is the discounted avg/hr.
+        const strike = it.effPrice < effectiveBasePrice ? `<span class="strike-price">${formatINR(it.base)}</span>` : '';
+        
+        const isBooked = !withinDate(it) && state.start && state.end; // <-- Used for presentation
+        const locationText = it.sub_city ? `${it.sub_city}, ${it.city}` : it.city;
+        
+        // NEW: Add specification HTML if it exists
+        const specHTML = it.specification ? `<div class="card-spec"><i class="fas fa-info-circle"></i> ${it.specification}</div>` : '';
+
+        return `
+        <article class="vehicle-card ${isBooked ? 'booked-out' : ''}" data-id="${it.id}" aria-label="${it.name}">
+          <div class="card-image-wrap">
+            <img alt="${it.name}" src="${it.img}" loading="lazy"/>
+            <span class="location-badge"><i class="fas fa-map-marker-alt"></i> ${locationText}</span>
+            <button class="fav-btn ${favd ? 'favorited' : ''}" aria-label="Toggle favorite" data-id="${it.id}">
+                <i class="${favd ? 'fas fa-heart' : 'far fa-heart'}"></i>
+            </button>
+          </div>
+          <div class="card-details">
+            <div class="card-header">
+                <h3 class="card-title">${it.name} <span class="brand-name">by ${it.brand}</span></h3>
+                <div class="card-rating">
+                    <strong>${it.rating.toFixed(1)}</strong> <i class="fas fa-star text-gold"></i>
+                </div>
+            </div>
+            <div class="card-tags-group">${badges}</div>
+            <div class="card-features">${feats}</div>
+            ${specHTML} <div class="card-footer">
+              <div class="pricing-info">
+                <span class="main-price">${formatINR(it.effPrice)}</span><span class="price-suffix"> / avg hr</span>${strike} 
+              </div>
+              <button class="book-btn btn-primary" data-id="${it.id}" ${isBooked ? 'disabled' : ''}>
+                ${isBooked ? 'Booked Out' : 'Book Now'}
+              </button>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    // MODIFIED: Summary now displays sub-city filter
+    function renderFiltersSummary(count) {
+        const pills = [];
+        if (state.city) pills.push(`City: ${state.city}`);
+        if (state.subCity) pills.push(`Area: ${state.subCity}`);
+        if (state.q) pills.push(`Search: ${state.q}`);
+        // Displaying date and time
+        if (state.start && state.end) pills.push(`${state.start.replace('T', ' ')} → ${state.end.replace('T', ' ')}`); 
+        if (state.maxPrice < 500) pills.push(`Max Price: ${formatINR(state.maxPrice)}/hr`);
+        if (state.minRating > 0) pills.push(`Min Rating: ${state.minRating.toFixed(1)} ★`);
+        if (state.brands.size) pills.push(`Brands: ${[...state.brands].join(', ')}`);
+        if (state.feats.size) pills.push(`Features: ${[...state.feats].join(', ')}`);
+        el('activeFilters').innerHTML = `
+            <span class="result-count">Showing <strong>${count}</strong> Rides</span>
+            ${pills.map(p => `<span class="active-filter-pill">${p}</span>`).join('')}
+        `;
+    }
+
+    // MODIFIED: restoreFromURL now handles subCity
+    function restoreFromURL() {
+        const p = new URLSearchParams(location.search);
+        state.q = p.get('q') || ''; el('q').value = state.q;
+        state.city = p.get('city') || ''; el('city').value = state.city;
+        state.subCity = p.get('subCity') || '';
+        
+        state.start = p.get('start') || ''; el('start').value = state.start; 
+        state.end = p.get('end') || ''; el('end').value = el('end').value || state.end;
+        
+        state.maxPrice = +(p.get('price') || 500); el('price').value = state.maxPrice; 
+        
+        state.minRating = +(p.get('minRating') || 0); el('minRating').value = state.minRating; 
+        state.sort = p.get('sort') || 'relevance'; el('sort').value = state.sort;
+        
+        qsa('input[name="type"]').forEach(cb => cb.checked = state.types.has(cb.value));
+        qsa('input[name="fuel"]').forEach(cb => cb.checked = state.fuels.has(cb.value));
+        qsa('input[name="gear"]').forEach(cb => cb.checked = state.gears.has(cb.value));
+        
+        const savedBrands = p.get('brands')?.split(',') || [];
+        if (savedBrands.length > 0) {
+            state.brands = new Set(savedBrands);
+            qsa('input[name="brand"]').forEach(cb => cb.checked = state.brands.has(cb.value));
+        }
+
+        const savedFeats = p.get('feats')?.split(',') || [];
+        if (savedFeats.length > 0) {
+            state.feats = new Set(savedFeats);
+            qsa('input[name="feat"]').forEach(cb => cb.checked = state.feats.has(cb.value));
+        }
+    }
+
+    // ---------- FAVORITES & CART ----------
+    const FAV_KEY = 'ridenow:favs'; const CART_KEY = 'ridenow:cart';
+    const getFavs = () => new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
+    const saveFavs = set => localStorage.setItem(FAV_KEY, JSON.stringify([...set]));
+    const isFav = id => getFavs().has(id);
+    function toggleFav(e) { 
+        const id = e.currentTarget.dataset.id; 
+        const favs = getFavs(); 
+        const icon = e.currentTarget.querySelector('i');
+
+        if (favs.has(id)) { 
+            favs.delete(id); 
+            icon.classList.remove('fas'); icon.classList.add('far');
+            e.currentTarget.classList.remove('favorited');
+        } else { 
+            favs.add(id); 
+            icon.classList.remove('far'); icon.classList.add('fas');
+            e.currentTarget.classList.add('favorited');
+        } 
+        saveFavs(favs); 
+    }
+
+    const getCart = () => JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const saveCart = arr => localStorage.setItem(CART_KEY, JSON.stringify(arr));
+
+    // UPDATED openBooking FUNCTION FOR RAZORPAY INTEGRATION (CRITICAL CHANGE)
+    async function openBooking(e) {
+        const id = e.currentTarget.dataset.id; 
+        const item = INVENTORY.find(x => x.id === id);
+        
+        const s = el('start').value; // YYYY-MM-DDTHH:MM
+        const eDate = el('end').value; // YYYY-MM-DDTHH:MM
+
+        // 1. Basic Date Validation & Availability Check
+        if (!s || !eDate || new Date(s) >= new Date(eDate)) {
+            alert("Please select a valid start and end time for booking (end time must be later than start time).");
+            return;
+        }
+        
+        if (!withinDate(item)) {
+            alert("This vehicle is already booked for the selected dates/times. Please choose another vehicle or time slot.");
+            return;
+        }
+        
+        const total_seconds = (new Date(eDate) - new Date(s)) / 1000;
+        const total_hours = total_seconds / 3600;
+        const billed_hours = total_hours < 24 ? Math.ceil(total_hours) : total_hours;
+
+        // Client-side estimate for display (Server will verify)
+        let subtotal_client = billed_hours * item.base;
+        if (item.fuel === 'Electric') subtotal_client *= 0.95;
+        else if (item.fuel === 'Diesel') subtotal_client *= 1.05;
+        
+        // --- CRITICAL CHANGE: NEW Long-term Discount Logic (Client-side sync) ---
+        if (total_hours >= 48 && total_hours < 96) subtotal_client *= 0.95; 
+        else if (total_hours >= 96) subtotal_client *= 0.85; 
+        // ------------------------------------------------------------------------
+        
+        const perHour = Math.round(subtotal_client / billed_hours);
+        
+        // --- CRITICAL: Use NEW Dynamic Deposit Calculation ---
+        const dep_client = calculateDepositClient(subtotal_client, total_hours);
+        // -----------------------------------------------------
+
+        const gst_client = Math.round(subtotal_client * 0.18);
+        const total_client = subtotal_client + gst_client + dep_client;
+        const final_total_to_send = Math.round(total_client);
+
+        const dlg = el('modal');
+        const s_display = s.replace('T', ' ');
+        const e_display = eDate.replace('T', ' ');
+        const billed_hours_display = billed_hours.toFixed(1).replace('.0', '');
+        const locationText = item.sub_city ? `${item.sub_city}, ${item.city}` : item.city;
+
+        // 2. BUILD MODAL HTML (Display updated deposit)
+        dlg.innerHTML = `
+            <form method="dialog">
+                <div class="modal-content">
+                    <h2>Confirm Your Ride Booking</h2>
+                    
+                    <div class="modal-grid">
+                        <div class="vehicle-summary">
+                            <h3><i class="fas fa-info-circle"></i> Booking Details</h3>
+                            <img src="${item.img}" alt="${item.name} Image" loading="lazy">
+                            <div class="vehicle-stats">
+                                <div class="kv"><span>Vehicle</span><strong>${item.name} (${item.brand})</strong></div>
+                                <div class="kv"><span>Location</span><strong>${locationText}</strong></div>
+                                <div class="kv"><span>Rating</span><strong>${item.rating.toFixed(1)} <i class="fas fa-star text-gold"></i></strong></div>
+                                <div class="kv"><span>Dates</span><strong>${s_display} → ${e_display}</strong></div> 
+                                <div class="kv"><span>Duration</span><strong>${billed_hours_display} Hour${billed_hours > 1 ? 's' : ''}</strong></div>
+                            </div>
+                        </div>
+                        
+                        <div class="pricing-section">
+                            <h3><i class="fas fa-receipt"></i> Price Breakdown</h3>
+                            <div class="pricing-info-list">
+                                <div class="kv"><span>Price/Hour (Avg)</span><strong>${formatINR(perHour)}</strong></div>
+                                <div class="kv"><span>Booking Subtotal (${billed_hours_display}h)</span><strong>${formatINR(Math.round(subtotal_client))}</strong></div>
+                                <div class="kv"><span>Taxes (GST 18%)</span><strong>${formatINR(gst_client)}</strong></div>
+                                <div class="kv"><span>Refundable Deposit</span><strong>${formatINR(dep_client)}</strong></div>
+                                <p style="font-size: 0.8em; color: #155724; margin-top: 5px;">*This amount is 100% refundable upon safe return.</p>
+                                <div class="kv total"><span>Total Payable</span><strong>${formatINR(final_total_to_send)}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn-secondary" value="cancel"><i class="fas fa-times"></i> Cancel</button>
+                        <button class="btn-primary" value="default" id="confirmPay"><i class="fas fa-wallet"></i> Pay ${formatINR(final_total_to_send)} & Confirm</button>
+                    </div>
+                </div>
+            </form>`;
+            
+        dlg.showModal();
+
+        // 3. Connect to Backend API for Payment Order
+        const confirmPayBtn = qs('#confirmPay', dlg);
+        confirmPayBtn.addEventListener('click', async (event) => {
+            event.preventDefault(); // Stop form submission
+            
+            confirmPayBtn.disabled = true;
+            confirmPayBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing Payment...';
+            
+            // CRITICAL: Convert datetime-local format (YYYY-MM-DDTHH:MM) to SQL format (YYYY-MM-DD HH:MM:SS)
+            const start_for_server = s.replace('T', ' ') + ':00';
+            const end_for_server = eDate.replace('T', ' ') + ':00';
+            
+            const bookingDataForServer = {
+                vehicle_id: item.id, // Vehicle ID (code)
+                start_date: start_for_server, 
+                end_date: end_for_server,
+            };
+
+            try {
+                // A. Request Razorpay Order ID from Flask Backend
+                const orderResponse = await fetch('{{ url_for("create_razorpay_order") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingDataForServer),
+                });
+                
+                if (orderResponse.status === 401) {
+                    alert("❌ Login Required: You must be logged in to book a ride.");
+                    window.location.href = "{{ url_for('login') }}";
+                    return;
+                }
+
+                const orderResult = await orderResponse.json();
+                
+                if (!orderResult.success) {
+                    throw new Error(orderResult.message || 'Failed to create payment order.');
+                }
+
+                // B. Open Razorpay Checkout Modal
+                const options = {
+                    key: orderResult.key_id, 
+                    amount: orderResult.amount, // Amount in paise
+                    currency: 'INR',
+                    name: 'PrimeDrew Rides',
+                    description: `Booking for ${item.name} (${billed_hours_display} hours)`,
+                    order_id: orderResult.order_id, 
+                    handler: async function (response) {
+                        // C. Payment Successful: Call Backend to Save Booking
+                        confirmPayBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verifying Payment...';
+                        
+                        const verifyResponse = await fetch('{{ url_for("confirm_booking") }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                total_price: final_total_to_send // Sent for server price comparison
+                            }),
+                        });
+
+                        const verifyResult = await verifyResponse.json();
+                        
+                        if (verifyResponse.ok) {
+                            alert(`✅ Payment & Booking Successful! ID: ${verifyResult.booking_id}. Total: ${formatINR(final_total_to_send)}`);
+                            
+                            // Update cart and force reload
+                            const cart = getCart();
+                            cart.push({ id: item.id, name: item.name, city: item.city, start: s_display, end: e_display, hours: billed_hours_display, total: final_total_to_send, booking_id: verifyResult.booking_id });
+                            saveCart(cart);
+                            
+                            // Crucial: Force a reload so the next search query correctly sees the booked dates.
+                            window.location.reload(); 
+                        } else {
+                            alert(`❌ Verification Failed: ${verifyResult.message || 'Server error during booking confirmation.'}`);
+                            dlg.close();
+                            // Re-enable button with original text
+                            confirmPayBtn.disabled = false;
+                            confirmPayBtn.innerHTML = '<i class="fas fa-wallet"></i> Pay ' + formatINR(final_total_to_send) + ' & Confirm';
+                        }
+                    },
+                    // Prefill user details (fetched from orderResult)
+                    prefill: {
+                        name: orderResult.name,
+                        email: orderResult.email,
+                        contact: orderResult.contact
+                    },
+                    theme: {
+                        color: '#3B82F6' // Primary Blue color for PrimeDrew
+                    }
+                };
+                
+                const rzp1 = new Razorpay(options);
+                
+                // Handle payment failure from the modal
+                rzp1.on('payment.failed', function (response){
+                    alert(`❌ Payment Failed: ${response.error.description}. Please try again.`);
+                    // Re-enable button with original text
+                    confirmPayBtn.disabled = false;
+                    confirmPayBtn.innerHTML = '<i class="fas fa-wallet"></i> Pay ' + formatINR(final_total_to_send) + ' & Confirm';
+                });
+
+                // Open the modal
+                dlg.close(); // Close custom modal before opening RZP modal
+                rzp1.open();
+
+            } catch (error) {
+                console.error('Booking Process Error:', error);
+                alert(`A critical error occurred: ${error.message}. Please try again.`);
+                confirmPayBtn.disabled = false;
+                confirmPayBtn.innerHTML = '<i class="fas fa-wallet"></i> Pay ' + formatINR(final_total_to_send) + ' & Confirm';
+                dlg.close(); // Close custom modal if open
+            }
+        }); // End of click listener
+
+        dlg.addEventListener('close', () => dlg.innerHTML = '');
+    }
+
+    function showFavorites() {
+        const favs = getFavs();
+        const items = INVENTORY.filter(x => favs.has(x.id));
+        const html = items.length ? items.map(x => `<li><strong>${x.name}</strong> — ${x.city} — ${formatINR(priceFor(x))}/avg hr</li>`).join('') : '<li class="text-muted">No favorites yet</li>';
+        const dlg = el('modal'); dlg.innerHTML = `<form method="dialog"><div class="modal-body"><h3>Favorites</h3><ul class="modal-list">${html}</ul><div style="text-align:right;margin-top:10px"><button class="btn-primary" value="default">Close</button></div></form>`; dlg.showModal(); dlg.addEventListener('close', () => dlg.innerHTML = '');
+    }
+
+    function showCart() {
+        const cart = getCart();
+        // CHANGED: days to hours
+        const html = cart.length ? cart.map((c, i) => `<li><strong>${c.name}</strong> — ${c.city} — ${c.start} → ${c.end} — <em>${c.hours}h</em> — <strong>${formatINR(c.total)}</strong> <button class="btn-icon btn-remove" data-i="${i}"><i class="fas fa-trash"></i></button></li>`).join('') : '<li class="text-muted">No bookings yet</li>';
+        const dlg = el('modal'); dlg.innerHTML = `<form method="dialog"><div class="modal-body"><h3>Your Bookings</h3><ul id="cartList" class="modal-list">${html}</ul><div style="display:flex;justify-content:space-between;margin-top:10px"><button class="btn-clear" id="clearCart">Clear All</button><button class="btn-primary" value="default">Close</button></div></div></form>`; dlg.showModal();
+        qs('#clearCart', dlg)?.addEventListener('click', () => { saveCart([]); showCart(); });
+        qsa('button[data-i]', dlg).forEach(b => b.addEventListener('click', e => { const i = +e.currentTarget.dataset.i; const c = getCart(); c.splice(i, 1); saveCart(c); showCart(); }));
+        dlg.addEventListener('close', () => dlg.innerHTML = '');
+    }
+
+
+    // ---------- HELPERS ----------
+    function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); } }
+
+    // ---------- BOOT ----------
+    // Map is initialized via the Google Maps callback 'initMap', which then calls 'init()'
+</script>
+</body>
+</html>

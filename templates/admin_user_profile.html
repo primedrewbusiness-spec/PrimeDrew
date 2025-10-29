@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile - {{ user.first_name }} {{ user.last_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        .dashboard-header { color: #212529; margin-bottom: 30px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        .profile-container { background-color: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 900px; margin: auto; }
+        .profile-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .profile-header h2 { margin: 0; font-size: 1.8rem; }
+        .status-badge { font-size: 1rem; padding: 8px 12px; border-radius: 5px; font-weight: bold; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .info-card { background-color: #f8f9fa; padding: 15px; border-radius: 5px; }
+        .info-card h4 { margin-top: 0; color: #495057; font-size: 1rem; border-bottom: 1px solid #dee2e6; padding-bottom: 5px; margin-bottom: 10px; }
+        .info-card p { margin: 5px 0; font-size: 0.95rem; }
+        .info-card strong { color: #212529; }
+        .section-title { margin-top: 30px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 15px; color: #343a40; font-size: 1.4rem; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .badge-active { background-color: #28a745; color: white; }
+        .badge-blocked { background-color: #dc3545; color: white; }
+        .badge-pending { background-color: #ffc107; color: #343a40; }
+        .table-data { width: 100%; border-collapse: collapse; }
+        .table-data th, .table-data td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.9rem; }
+        .btn-action { background-color: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <a href="{{ url_for('admin_users') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to User List</a>
+
+        <div class="profile-header">
+            <h2>{{ user.first_name }} {{ user.last_name }} 
+                <span style="font-size: 0.8em; color: #6c757d;">({{ user.role|capitalize }})</span>
+            </h2>
+            <span class="status-badge {% if user.is_active %}badge-active{% else %}badge-blocked{% endif %}">
+                Account: {% if user.is_active %}ACTIVE{% else %}BLOCKED{% endif %}
+            </span>
+        </div>
+
+        <div class="section-title"><i class="fas fa-id-card"></i> Contact & Verification (KYC)</div>
+        <div class="info-grid">
+            <div class="info-card">
+                <h4>Contact Details</h4>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Phone:</strong> {{ user.phone }}</p>
+                <p><strong>D.O.B:</strong> {{ user.dob }}</p>
+            </div>
+            <div class="info-card">
+                <h4>Verification Details</h4>
+                <p><strong>ID Document:</strong> {{ user.identity_doc }}</p>
+                <p><strong>DL Number:</strong> {{ user.dl_number }}</p>
+                <p><strong>DL Expiry:</strong> {{ user.dl_expiry }}</p>
+                {% if user.role == 'host' or user.role == 'both' %}
+                    <p><strong>Host Status:</strong> <span class="status-badge {% if user.is_approved_host %}badge-active{% else %}badge-pending{% endif %}">
+                        {% if user.is_approved_host %}APPROVED{% else %}PENDING{% endif %}
+                    </span></p>
+                    
+                    {% if user.kyc_file_path %}
+                        <p style="margin-top: 15px;">
+                            <strong>KYC File:</strong> 
+                            <a href="{{ user.kyc_file_path }}" target="_blank" style="color: #007bff; font-weight: bold;">
+                                <i class="fas fa-file-image"></i> View Document
+                            </a>
+                        </p>
+                    {% else %}
+                        <p style="color: #dc3545;">KYC File: Not Found / Upload Pending</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-map-marker-alt"></i> Address</div>
+        <div class="info-grid">
+             <div class="info-card" style="grid-column: span 2;">
+                <p><strong>Address Line 1:</strong> {{ user.address1 }}</p>
+                {% if user.address2 %}
+                    <p><strong>Address Line 2:</strong> {{ user.address2 }}</p>
+                {% endif %}
+                <p><strong>City/State/Pin:</strong> {{ user.city }}, {{ user.state }} - {{ user.pincode }}</p>
+            </div>
+        </div>
+        
+        {% if user.role == 'host' or user.role == 'both' %}
+            <div class="section-title"><i class="fas fa-money-bill-wave"></i> Host Financials</div>
+            <div class="info-card">
+                <p><strong>Lifetime Earnings Due (80%):</strong> <span style="color: green; font-weight: bold;">₹{{ "{:,.0f}".format(host_earnings) }}</span></p>
+                <p><strong>Total Listed Vehicles:</strong> {{ user.vehicles|length }}</p>
+            </div>
+        {% endif %}
+
+
+        <div class="section-title"><i class="fas fa-calendar-alt"></i> Booking History</div>
+        {% if bookings %}
+        <table class="table-data">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Vehicle</th>
+                    <th>Role</th>
+                    <th>Dates</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>#{{ booking.id }}</td>
+                    <td>{{ booking.vehicle_info.name }}</td>
+                    <td>
+                        {% if booking.user_id == user.id %}Customer{% else %}Host{% endif %}
+                    </td>
+                    <td>{{ booking.start_date.strftime('%Y-%m-%d %H:%M') }} to {{ booking.end_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>₹{{ "{:,.0f}".format(booking.total_price) }}</td>
+                    <td>{{ booking.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>No booking history available for this user/host.</p>
+        {% endif %}
+
+        <div class="section-title"><i class="fas fa-cogs"></i> Admin Actions</div>
+        <div style="padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            {% if user.role == 'host' or user.role == 'both' %}
+                {% if not user.is_approved_host %}
+                    <button class="btn-action" style="background-color: #28a745;" onclick="approveHost({{ user.id }})">
+                        <i class="fas fa-check"></i> Final Approve Host
+                    </button>
+                    <span style="margin-left: 10px; color: #6c757d;">(Approval sends SMS and allows listing)</span>
+                {% else %}
+                     <span style="margin-left: 10px; color: #28a745; font-weight: bold;">Host is already approved.</span>
+                {% endif %}
+                <hr style="margin: 15px 0;">
+            {% endif %}
+
+            <button 
+                class="{% if user.is_active %}btn-block{% else %}btn-activate{% endif %}" 
+                onclick="toggleHostStatus({{ user.id }}, '{{ 'true' if user.is_active else 'false' }}')"
+            >
+                {% if user.is_active %}
+                    <i class="fas fa-ban"></i> Block Account
+                {% else %}
+                    <i class="fas fa-redo"></i> Activate Account
+                {% endif %}
+            </button>
+            <span style="margin-left: 10px; color: #6c757d;">(Blocking prevents login and deactivates vehicles.)</span>
+
+        </div>
+        </div>
+
+    </body>
+</html>

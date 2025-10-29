@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}FAQs - PrimeDrew Help Center{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="max-width: 900px; margin: 40px auto; padding: 20px; background-color: #f7f7f7; border-radius: 10px;">
+    <h1 style="text-align: center; color: #007bff; margin-bottom: 10px;">❓ Frequently Asked Questions (FAQs)</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 40px;">Answers to your most common questions.</p>
+
+    <style>
+        .faq-item {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+            transition: box-shadow 0.3s;
+        }
+        .faq-item:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        .faq-question {
+            background-color: #e9f7ff; /* Light blue background */
+            color: #333;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .faq-question:hover {
+            background-color: #d8efff;
+        }
+        .faq-answer {
+            padding: 15px 20px;
+            background-color: #ffffff;
+            /* Initially hidden for accordion effect, need JS to toggle display */
+            display: none; 
+            border-top: 1px solid #eee;
+        }
+        .faq-answer p {
+            margin: 0;
+            line-height: 1.6;
+            color: #555;
+        }
+        .faq-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+        /* JS will toggle a class (e.g., 'active') to rotate the icon */
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+
+    <div class="faq-container">
+        <div class="faq-item" id="faq1">
+            <div class="faq-question">
+                <span>Am I eligible to rent a vehicle on PrimeDrew in India?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <p>Yes, provided you are **18 years or older** and possess a **valid driving license**. You must upload proof during registration for verification purposes.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" id="faq2">
+            <div class="faq-question">
+                <span>How much is the refundable Security Deposit?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <p>The deposit varies based on your booking duration, ranging from **₹500** for rentals under 24 hours to a maximum of **₹5000** for longer rentals. It is fully refunded once the vehicle is returned safely and on time.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" id="faq3">
+            <div class="faq-question">
+                <span>What is your cancellation policy?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <p>You can cancel your booking within **1 hour** of payment without any charge. After 1 hour, a **10% cancellation fee** of the total booking amount will be charged, and the remainder will be refunded.</p>
+            </div>
+        </div>
+
+        <div class="faq-item" id="faq4">
+            <div class="faq-question">
+                <span>How much commission do I earn as a Host?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <p>Hosts default to earning **70%** of the rental value (excluding the security deposit). Experienced hosts who qualify for the Premium Tier can earn up to **80%**.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item" id="faq5">
+            <div class="faq-question">
+                <span>What happens if I return the vehicle late?</span>
+                <i class="fas fa-chevron-down faq-icon"></i>
+            </div>
+            <div class="faq-answer">
+                <p>A late return may incur an additional hourly fee, which can be higher than the original rate. Please contact the Host immediately if you know you will be delayed to avoid unnecessary penalties.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <p style="font-size: 16px; color: #007bff;">Still have questions? <a href="{{ url_for('contact_page') }}" style="color: #dc3545; text-decoration: none; font-weight: bold;">Contact Our Support Team!</a></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const faqItems = document.querySelectorAll('.faq-item');
+
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            const answer = item.querySelector('.faq-answer');
+            const icon = item.querySelector('.faq-icon');
+
+            question.addEventListener('click', () => {
+                // Toggle the 'active' class on the item
+                item.classList.toggle('active');
+
+                // Toggle the display of the answer content
+                if (item.classList.contains('active')) {
+                    answer.style.display = 'block';
+                    icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+                } else {
+                    answer.style.display = 'none';
+                    icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

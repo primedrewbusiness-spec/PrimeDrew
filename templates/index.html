@@ -1,0 +1,69 @@
+{% extends "base.html" %} 
+
+{% block title %}Home - PrimeDrew{% endblock %}
+
+{% block content %}
+    
+    <div class="container1">
+        <div class="hero-content">
+            <div class="main-logo-area">
+                <img src="{{ url_for('static', filename='images/logoprimedrew.jpg') }}" alt="PrimeDrew Main Logo" class="large-hero-logo">
+            </div>
+            
+            <div class="btn-group-center">
+                {% if session.logged_in %}
+                    {# Show appropriate dashboard link if needed, otherwise rely on the header profile icon #}
+                {% else %}
+                    <a href="{{ url_for('register_page') }}">
+                        <button class="btn1">Registration</button>
+                    </a>
+                    <a href="{{ url_for('login') }}">
+                        <button class="btn2">Login</button>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="container2">
+        <div class="scootydiv card">
+            <a href="{{ url_for('search_page') }}?category=scooter" style="text-decoration: none; color: inherit; display: block;">
+                <div class="scootyimg"><img src="{{ url_for('static', filename='images/scootyimg PD.jpg') }}" alt="Scooter Image"></div>
+                <p>Click Here For Scooties</p>
+            </a>
+        </div>
+        
+        <div class="bikediv card">
+            <a href="{{ url_for('search_page') }}?category=bike" style="text-decoration: none; color: inherit; display: block;">
+                <div class="bikeimg"><img src="{{ url_for('static', filename='images/bikeimg PD.jpg') }}" alt="Bike Image"></div>
+                <p>Click Here For Bikes</p>
+            </a>
+        </div>
+        
+        <div class="cardiv card">
+            <a href="{{ url_for('search_page') }}?category=car" style="text-decoration: none; color: inherit; display: block;">
+                <div class="carimg"><img src="{{ url_for('static', filename='images/carimg PD.jpg') }}" alt="Car Image"></div>
+                <p>Click Here For Cars</p>
+            </a>
+        </div>
+    </div>
+    
+    
+    <div class="container3">
+        <div class="hostimg-wrapper">
+            <img src="{{ url_for('static', filename='images/hostimg.jpg') }}" alt="Host Image">
+        </div>
+        
+        <div class="hosttext">
+            <h1>Become a Host</h1>
+            <p>Join our community of hosts and earn money by renting out your vehicles. It's easy to get started!</p>
+        </div>
+        
+        <div class="hostbtn">
+            <a href="{{ url_for('register_page') }}?role=host" class="btn-host-link">
+                           <button>Register as Host</button>
+            </a>
+        </div>
+    </div>
+{% endblock %}

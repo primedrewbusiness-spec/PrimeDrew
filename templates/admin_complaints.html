@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Complaints - PrimeDrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Copied styles from admin_dashboard.html for consistency */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .dashboard-header {
+            color: #212529;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        .admin-nav {
+            background-color: #343a40;
+            padding: 10px 20px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .admin-nav a {
+            color: #f8f9fa;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color: 0.3s;
+        }
+
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .table-section {
+            margin-top: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .badge-active {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .badge-pending {
+            background-color: #ffc107;
+            color: #343a40;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        /* Additional styles for filters and table */
+        .filter-bar {
+            margin-bottom: 20px;
+        }
+
+        .filter-bar a {
+            text-decoration: none;
+            padding: 8px 15px;
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 5px;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .filter-bar a.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .message-cell {
+            max-width: 400px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        td select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="dashboard-header"><i class="fas fa-exclamation-circle"></i> Manage Complaints</h1>
+
+    <div class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}"
+            class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard & Finance
+        </a>
+        <a href="{{ url_for('admin_users') }}" class="{{ 'active' if request.endpoint == 'admin_users' else '' }}">
+            <i class="fas fa-users-cog"></i> User & Host Management
+        </a>
+        <a href="{{ url_for('admin_complaints') }}"
+            class="{{ 'active' if request.endpoint == 'admin_complaints' else '' }}">
+            <i class="fas fa-exclamation-circle"></i> Support Tickets
+        </a>
+        <a href="{{ url_for('logout') }}" style="margin-left: auto;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert-success">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="table-section">
+        <h2><i class="fas fa-envelope-open-text"></i> Submitted Messages</h2>
+
+        <div class="filter-bar">
+            <strong>Filter by Status:</strong>
+            <a href="{{ url_for('admin_complaints', status='New') }}"
+                class="{{ 'active' if current_filter == 'New' else '' }}">New</a>
+            <a href="{{ url_for('admin_complaints', status='In Progress') }}"
+                class="{{ 'active' if current_filter == 'In Progress' else '' }}">In Progress</a>
+            <a href="{{ url_for('admin_complaints', status='Resolved') }}"
+                class="{{ 'active' if current_filter == 'Resolved' else '' }}">Resolved</a>
+            <a href="{{ url_for('admin_complaints', status='All') }}"
+                class="{{ 'active' if current_filter == 'All' else '' }}">All</a>
+        </div>
+
+        {% if complaints %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>From</th>
+                    <th>Subject</th>
+                    <th>Message</th>
+                    <th>Submitted At</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    <td>#{{ complaint.id }}</td>
+                    <td><b>{{ complaint.name }}</b><br><small>{{ complaint.email }}</small></td>
+                    <td>{{ complaint.subject }}</td>
+                    <td class="message-cell">{{ complaint.message }}</td>
+                    <td>{{ complaint.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if complaint.status == 'New' %}
+                        <span class="badge-pending">New</span>
+                        {% elif complaint.status == 'In Progress' %}
+                        <span class="badge-info">In Progress</span>
+                        {% elif complaint.status == 'Resolved' %}
+                        <span class="badge-active">Resolved</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <select onchange="updateStatus({{ complaint.id }}, this.value)" title="Change complaint status">
+                            <option value="New" {{ 'selected' if complaint.status=='New' }}>New</option>
+                            <option value="In Progress" {{ 'selected' if complaint.status=='In Progress' }}>In Progress
+                            </option>
+                            <option value="Resolved" {{ 'selected' if complaint.status=='Resolved' }}>Resolved</option>
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="padding: 20px; text-align: center;">✅ No complaints matching the filter '<b>{{ current_filter }}</b>'.
+        </p>
+        {% endif %}
+    </div>
+
+    <script>
+        function updateStatus(complaintId, newStatus) {
+            if (!confirm(`Are you sure you want to change the status for Complaint #${complaintId} to "${newStatus}"?`)) {
+                // If user cancels, we reload to reset the dropdown to its saved state.
+                window.location.reload();
+                return;
+            }
+            fetch(`/api/admin/update_complaint_status/${complaintId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload to show the flashed message and update the table correctly
+                        window.location.reload();
+                    } else {
+                        alert('Error updating status: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while communicating with the server.');
+                });
+        }
+    </script>
+</body>
+
+</html>

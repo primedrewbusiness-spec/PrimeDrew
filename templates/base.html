@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PrimeDrew{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+
+    <link rel="icon" href="{{ url_for('static', filename='images/pd-logo.png') }}">
+
+    <style>
+        /* Flash Message Styling (Kept as is) */
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 38rem;
+            z-index: 9999;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            animation: fadeInOut 5s ease-in-out forwards;
+        }
+
+        .flash-message.flash-info {
+            background-color: #2196F3;
+        }
+
+        .flash-message.flash-error {
+            background-color: #F44336;
+            /* Red for errors */
+        }
+
+        .flash-message.flash-warning {
+            background-color: #ff9800;
+            /* Orange for warnings */
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            10% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            90% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        /* Profile Icon and Animation Container */
+        .profile-icon-wrapper {
+            position: relative;
+            cursor: pointer;
+            border-radius: 50%;
+            padding: 5px;
+        }
+
+        @keyframes rotating-border {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .profile-icon-wrapper.logged-in::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: conic-gradient(#ff0000 0% 12.5%, #ff8000 12.5% 25%, #ffff00 25% 37.5%,
+                    #00ff00 37.5% 50%, #0000ff 50% 62.5%, #8000ff 62.5% 75%,
+                    #ff00ff 75% 87.5%, #ff0000 87.5% 100%);
+            background-size: 100% 100%;
+            padding: 2px;
+            mask: radial-gradient(circle at center, transparent, transparent 65%, black 70%);
+            -webkit-mask: radial-gradient(circle at center, transparent, transparent 65%, black 70%);
+            animation: rotating-border 4s linear infinite;
+            z-index: 10;
+        }
+
+        .profile-icon-wrapper #imglogo {
+            position: relative;
+            z-index: 20;
+            border-radius: 50%;
+            display: block;
+        }
+
+        /* Profile Modal/Popup Styling */
+        .profile-modal {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            width: 300px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 9000;
+            padding: 15px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Other Profile Modal Styles... */
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-modal h4 {
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 5px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .profile-modal p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .profile-modal strong {
+            color: #000;
+            font-weight: 600;
+        }
+
+        .profile-actions {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profile-actions button,
+        .profile-actions a {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .profile-actions .logout-btn {
+            background-color: #dc3545;
+        }
+
+        .profile-actions button:hover,
+        .profile-actions a:hover {
+            background-color: #0056b3;
+        }
+
+        .profile-actions .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Layout Styles */
+        .main-logo-area {
+            margin-top: 50px;
+        }
+
+        /* FOOTER STYLING */
+        .site-footer {
+            background-color: #181825;
+            color: #fff;
+            padding: 40px 20px 20px;
+            font-size: 14px;
+        }
+        .site-footer img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #555;
+        }
+        .fab{
+            color:white;
+        }
+        .fa-facebook-f:hover {
+            fill:blue;
+        }
+        .fa-instagram:hover {
+            fill:pink;
+        }
+
+
+        .footer-col {
+            flex: 1 1 200px;
+        }
+
+        .footer-col h4 {
+            font-size: 16px;
+            color: #007bff;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .footer-links ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links a,
+        .footer-legal a,
+        .footer-contact p {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer-links a {
+            color: #ccccccff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover, .footer-legal a:hover {
+            color: #5523d3ff;
+            text-decoration:underline;
+        }
+
+        .footer-contact .fas {
+            margin-right: 8px;
+            color: #28a745;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+
+        /* CRITICAL: Space for content on non-homepage views */
+        .main-content-wrapper {
+           
+            min-height: 70vh;
+            /* Ensures footer stays at the bottom */
+        }
+    </style>
+</head>
+
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="flash-message flash-{{ category }} flash-{{ category if category != 'message' else 'info' }}">
+        {{ message | safe }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <header class="site-header">
+        <div class="logo-group">
+
+            {% if session.logged_in %}
+            <div class="profile-icon-wrapper logged-in" id="profileToggle">
+                <div class="pd-logo">
+                    <img src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}"
+                        alt="Profile Dashboard" id="imglogo" title="Click to view Dashboard/Profile">
+                </div>
+            </div>
+
+            <div class="profile-modal" id="profileModal">
+                <div class="modal-title">Profile Dashboard</div>
+
+                <h4>Welcome, {{ session.user_name or 'User' }}! 👋</h4>
+                <p><strong>Role:</strong> {{ session.user_role|capitalize }}</p>
+
+                {% if session.user_email %}<p><strong>Email:</strong> {{ session.user_email }}</p>{% endif %}
+                {% if session.user_phone %}<p><strong>Phone:</strong> {{ session.user_phone }}</p>{% endif %}
+
+                <div class="profile-actions">
+                    <a
+                        href="{{ url_for('admin_dashboard') if session.user_role == 'super_admin' else (url_for('host_dashboard') if session.user_role == 'host' else url_for('my_bookings')) }}">
+                        Go to Dashboard
+                    </a>
+
+                    <a href="{{ url_for('forgot_password_page') }}">
+                        <button style="background-color: #28a745;">Change Password</button>
+                    </a>
+
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        Log Out
+                    </a>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="pd-logo">
+                <img src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}" alt="PrimeDrew Logo"
+                    id="imglogo">
+            </div>
+            {% endif %}
+
+            <div class="logo-name">PrimeDrew</div>
+        </div>
+
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" />
+        <label for="nav-toggle" class="hamburger" aria-label="Toggle navigation" role="button" tabindex="0">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </label>
+
+        <nav class="nav" aria-label="Primary">
+            <ul class="nav-list">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('about_page') }}">About Us</a></li>
+                <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+                <li><a href="{{ url_for('contact_page') }}">Contact Us</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-content-wrapper">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-col footer-branding">
+                <img src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}" alt="PrimeDrew Logo"
+                    class="footer-logo">
+                <p>Your journey begins here. Rent Scooters, Bikes, and Cars hassle-free with <b>PrimeDrew</b></p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col footer-links">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('about_page') }}">About Us</a></li>
+                    <li><a href="{{ url_for('contact_page') }}">Contact Us</a></li>
+                    <li><a href="{{ url_for('my_bookings') }}">My Bookings</a></li>
+                    <li><a href="{{ url_for('search_page') }}">Browse Vehicles</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col footer-legal">
+                <h4>Legal & Host</h4>
+                <ul>
+                    <li><a href="{{ url_for('privacy_terms_page') }}">Privacy Policy & T&Cs</a></li>
+                    <li><a href="{{ url_for('register_page') }}?role=host">Become a Host</a></li>
+                    <li><a href="{{ url_for('faq_page') }}">Help Center / FAQs</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col footer-contact">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i>: support@primedrew.com</p>
+                <p><i class="fas fa-phone"></i>: +91 7821811018</p>
+                <p class="address">Base Location: Pune, Maharashtra, India</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p class="copyright">&copy; 2025 PrimeDrew. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const profileToggle = document.getElementById('profileToggle');
+            const profileModal = document.getElementById('profileModal');
+
+            if (profileToggle && profileModal) {
+                profileToggle.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    profileModal.style.display = profileModal.style.display === 'block' ? 'none' : 'block';
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!profileModal.contains(event.target) && event.target !== profileToggle && profileModal.style.display === 'block') {
+                        profileModal.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

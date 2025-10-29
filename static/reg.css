@@ -1,0 +1,296 @@
+/* ========== CSS FOUNDATION (no fancy, no tilt) ========== */
+:root {
+  --bg: #0f1115;
+  --panel: #151823;
+  --muted: #a7b0c0;
+  --text: #e7ecf4;
+  --accent: #5aa7ff;
+  --accent-2: #2a76d2;
+  --danger: #ff6b6b;
+  --ok: #2ecc71;
+  --border: #2a2f3a;
+
+  --radius: 14px;
+  --radius-lg: 20px;
+  --gap-1: .5rem;
+  --gap-2: 1rem;
+  --gap-3: 1.25rem;
+  --gap-4: 1.75rem;
+  --maxw: 1080px;
+  --shadow: 0 6px 24px rgba(0,0,0,.35);
+  --line: 1.6;
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+/* --- REGISTRATION FORM SPECIFIC CSS (Add these to reg.css) --- */
+
+/* OTP Verification Center Alignment */
+.otp-center-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    width: 100%;
+}
+
+.otp-center-group .field {
+    max-width: 350px; 
+    width: 100%;
+    /* Override grid gap for alignment */
+    display: block; 
+}
+
+/* Password Eye Button Styling */
+.password-field-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-field-container input.control {
+    width: 100%;
+    padding-right: 45px; /* Space for the button */
+}
+
+.btn-toggle-password {
+    position: absolute;
+    right: 5px;
+    height: 40px; 
+    padding: 0 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1;
+    z-index: 10;
+}
+/* OTP Verification Specific Styling */
+
+/* Yeh class reCAPTCHA box aur OTP inputs ko center mein laayegi */
+.otp-center-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Items ko horizontally center karta hai */
+    width: 100%; /* Puri width lein */
+}
+
+/* Form groups ko center alignment mein adjust karein */
+.otp-center-group .form-group {
+    max-width: 300px; /* Inputs ki max width set karein */
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+/* reCAPTCHA container ko center karne ke liye */
+#recaptcha-container {
+    /* reCAPTCHA iframe khud center ho jaata hai jab container ki width set ho */
+    max-width: 300px; 
+    margin: 20px auto 0 auto; /* Auto margins center the block */
+}
+
+/* Button ki alignment theek karein jab woh .otp-center-group mein ho */
+.otp-center-group .btn-submit {
+    max-width: 300px; 
+    /* Yahaan koi extra margin ya padding nahi chahiye */
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/var(--line) var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img { max-width: 100%; display: block; }
+a { color: var(--accent); text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; }
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--panel);
+  color: var(--text);
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+}
+.skip-link:focus { left: .75rem; top: .75rem; z-index: 999; }
+
+.site-header,
+.site-footer {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 1.25rem var(--gap-2);
+}
+
+.brand {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.2rem + 1vw, 1.75rem);
+  letter-spacing: .3px;
+}
+.subtitle { margin: .25rem 0 0; color: var(--muted); }
+
+.container {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--gap-3) var(--gap-2) var(--gap-4);
+}
+
+.form {
+  background: linear-gradient(180deg, #141826 0%, #121521 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: clamp(1rem, 2vw + .5rem, 2rem);
+}
+
+.form__title {
+  margin: 0 0 var(--gap-2);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 1rem + 0.8vw, 1.4rem);
+}
+
+.section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--gap-2);
+  background: #121622;
+  margin-bottom: var(--gap-3);
+}
+.section--terms { background: transparent; border: 1px dashed var(--border); }
+
+.section__legend {
+  padding: 0 .4rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  gap: var(--gap-2);
+}
+.grid--2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+.grid--3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+
+@media (max-width: 920px) {
+  .grid--3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .grid--2, .grid--3 { grid-template-columns: 1fr; }
+}
+
+.field { display: grid; gap: .4rem; }
+.label { font-weight: 600; }
+
+.control,
+select.control {
+  width: 100%;
+  height: 44px;
+  padding: 0 .9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0f1420;
+  color: var(--text);
+  outline: none;
+}
+.control[type="date"] { padding: 0 .5rem; }
+.control[type="number"] { padding-right: 0; }
+.control::placeholder { color: #8a93a6; }
+
+.control:focus-visible,
+select.control:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 80%);
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+/* Choices (radio/checkbox) */
+.choice-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  user-select: none;
+}
+.checkbox input[type="checkbox"],
+.choice input[type="radio"] {
+  width: 18px; height: 18px; margin: 0;
+  accent-color: var(--accent-2);
+}
+
+/* Validity states (HTML-only) */
+.control:required:invalid,
+select.control:required:invalid {
+  border-color: color-mix(in oklab, var(--danger), transparent 40%);
+}
+.control:required:valid,
+select.control:required:valid {
+  border-color: color-mix(in oklab, var(--ok), transparent 55%);
+}
+
+/* Buttons */
+.actions {
+  display: flex;
+  gap: var(--gap-2);
+  justify-content: flex-end;
+  margin-top: var(--gap-2);
+}
+.btn {
+  appearance: none;
+  height: 44px;
+  padding: 0 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent-2);
+  background: var(--accent-2);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn:hover,
+.btn:focus-visible { filter: brightness(1.05); }
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn--ghost:hover,
+.btn--ghost:focus-visible {
+  border-color: var(--accent);
+}
+
+/* Footer */
+.site-footer {
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 3rem;
+}
+
+/* Reduce motion respect */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* Light mode (optional, still simple) */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f3f5f9;
+    --panel: #fff;
+    --text: #111317;
+    --muted: #5c6473;
+    --border: #d9deea;
+    --shadow: 0 6px 20px rgba(0,0,0,.08);
+  }
+  .form { background: #fff; }
+  .section { background: #f8f9fc; }
+  .control { background: #fff; }
+}

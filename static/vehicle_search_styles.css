@@ -1,0 +1,880 @@
+/* Placeholder for general site styles (assumed from previous context) */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --accent-color: #28a745;
+    --bg-light: #f8f9fa;
+    --text-dark: #343a40;
+    --text-light: #fff;
+    --gold-star: #ffc107;
+    /* Variables copied from HTML context to ensure consistency */
+    --color-primary: #0453ff; /* Brand Blue from HTML */
+    --color-text-dark: #1f2937; /* Dark text from HTML */
+}
+
+/* FIX: Prevents horizontal overflow leading to the white strip */
+html, body {
+    overflow-x: hidden; 
+    margin: 0; 
+    padding: 0;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* --- Header & Navigation (FIXED for consistency) --- */
+/* ------------------------------------------------------------------ */
+.site-header {
+    background-color: #000; /* Black Header */
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 30px; /* Consistent height */
+    position: sticky;
+    top: 0;
+    z-index: 10000;
+}
+
+.logo-group {
+    display: flex;
+    align-items: center;
+    color: var(--color-primary); /* Blue Logo Name */
+    font-weight: 900;
+    font-size: 28px;
+    margin-left: 0; /* Adjusted margin */
+}
+.pd-logo {
+    display: flex;
+}
+
+.pd-logo img {
+    height: 40px;
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
+.nav-toggle {
+    display: none;
+}
+
+/* Hamburger for Mobile (FIXED) */
+.hamburger {
+    /* Display is controlled by media query below */
+    display: none; 
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px;
+    z-index: 10002;
+}
+
+.hamburger .bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    margin: 0 auto;
+    /* FIX: Make bars white */
+    background-color: var(--text-light); 
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hamburger transition states (FIXED) */
+.nav-toggle:checked + .hamburger .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle:checked + .hamburger .bar:nth-child(2) { opacity: 0; width: 0; }
+.nav-toggle:checked + .hamburger .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+
+/* Navigation Menu (Mobile/Desktop) */
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1rem; /* Desktop gap */
+}
+
+.nav-list li a {
+    color: var(--text-light);
+    padding: 10px 15px;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.nav-list li a:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle white hover on black */
+    border-radius: 6px;
+}
+
+
+/* --- Main Layout --- */
+.main-content {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.layout-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+}
+
+/* --- Compact Search Bar --- */
+.compact-search-bar {
+    display: flex;
+    align-items: center;
+    background-color: var(--text-light);
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.search-field-group,
+.date-select-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 8px 10px;
+    flex-grow: 1; /* Allows fields to fill space on desktop */
+}
+
+.search-input,
+.date-input,
+.city-select,
+.sort-select {
+    border: none;
+    outline: none;
+    padding: 0 5px;
+    font-size: 1em;
+    background: transparent;
+    flex-grow: 1;
+    min-width: 0; /* Prevents overflow */
+}
+
+.search-field-group i,
+.date-select-group i {
+    color: var(--secondary-color);
+    margin-right: 10px;
+}
+
+.separator {
+    color: var(--secondary-color);
+    padding: 0 5px;
+}
+
+.filter-toggle-btn {
+    flex-shrink: 0;
+}
+
+/* --- Sidebar Filters --- */
+.sidebar-filters {
+    background-color: var(--text-light);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    align-self: start;
+    position: sticky;
+    top: 20px;
+}
+
+.filter-group {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.filter-title {
+    color: var(--primary-color);
+    font-size: 1.1em;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.checkbox-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-list.column-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.checkbox-list label {
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+/* Range Input Styling */
+input[type="range"] {
+    width: 100%;
+    margin: 8px 0;
+}
+
+.price-display {
+    color: var(--accent-color);
+}
+
+.text-gold {
+    color: var(--gold-star);
+}
+
+/* Filter Actions Sticky Footer */
+.filter-actions-sticky {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    margin-top: 10px;
+}
+
+/* --- Results Area --- */
+.results-main {
+    min-width: 0;
+    /* Ensures it shrinks properly in grid */
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.result-count strong {
+    color: var(--primary-color);
+}
+
+.active-filter-pill {
+    background-color: #e9ecef;
+    color: var(--secondary-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-icon {
+    background: none;
+    border: 1px solid #ced4da;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-dark);
+}
+
+.btn-icon:hover {
+    background-color: #f1f1f1;
+}
+
+/* --- Vehicle Cards --- */
+.result-container {
+    display: grid;
+    gap: 20px;
+}
+
+.result-container.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.result-container.list-view {
+    grid-template-columns: 1fr;
+}
+
+.vehicle-card {
+    background-color: var(--text-light);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.result-container.list-view .vehicle-card {
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.card-image-wrap {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.result-container.list-view .card-image-wrap {
+    width: 280px;
+    height: auto;
+}
+
+.card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.location-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: var(--text-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+.fav-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1em;
+    color: var(--secondary-color);
+}
+
+.fav-btn.favorited {
+    color: red;
+}
+
+.card-details {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.result-container.list-view .card-details {
+    padding: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.brand-name {
+    font-size: 0.8em;
+    color: var(--secondary-color);
+    font-weight: normal;
+    display: block;
+    margin-top: 3px;
+}
+
+.card-rating strong {
+    color: var(--text-dark);
+}
+
+.card-tags-group,
+.card-features {
+    margin-bottom: 10px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.tag-base {
+    background-color: #e9f5ff;
+    color: var(--primary-color);
+}
+
+.tag-feat {
+    background-color: #e6ffed;
+    color: var(--accent-color);
+}
+
+.card-footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.pricing-info {
+    display: flex;
+    align-items: baseline;
+}
+
+.main-price {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.price-suffix {
+    font-size: 0.8em;
+    color: var(--secondary-color);
+    margin-left: 5px;
+}
+
+.strike-price {
+    font-size: 0.9em;
+    color: #dc3545;
+    text-decoration: line-through;
+    margin-left: 10px;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-clear {
+    background: none;
+    border: none;
+    color: var(--secondary-color);
+    cursor: pointer;
+}
+
+/* Pager */
+.pager {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.pager button {
+    background: var(--text-light);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pager button.current-page {
+    background-color: var(--primary-color);
+    color: var(--text-light);
+}
+
+
+/* ------------------------------------------------------------------ */
+/* --- NEW STYLES FOR ADVANCED BOOKING MODAL (User Request) --- */
+/* ------------------------------------------------------------------ */
+
+.custom-modal {
+    max-width: 900px;
+    /* Modal ko bada karein */
+    width: 95%;
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.custom-modal::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    padding: 30px;
+}
+
+.modal-content h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 2 columns for details and pricing */
+    gap: 30px;
+}
+
+/* Vehicle Details Section */
+.vehicle-summary h3 {
+    margin-top: 0;
+    color: var(--text-dark);
+    font-size: 1.4em;
+    margin-bottom: 10px;
+}
+
+.vehicle-summary img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.vehicle-stats .kv {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95em;
+    padding: 4px 0;
+    border-bottom: 1px dashed #f1f1f1;
+}
+
+.vehicle-stats .kv span {
+    color: var(--secondary-color);
+}
+
+/* Pricing Section */
+.pricing-section {
+    border-left: 1px solid #ddd;
+    padding-left: 30px;
+}
+
+.pricing-section h3 {
+    color: var(--accent-color);
+    /* Green for pricing header */
+    margin-top: 0;
+    font-size: 1.4em;
+}
+
+.pricing-info-list .kv {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 1.1em;
+    border-bottom: 1px dashed #eee;
+}
+
+.pricing-info-list .kv strong {
+    font-weight: 600;
+}
+
+.pricing-info-list .total {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--text-dark);
+    border-top: 2px solid var(--primary-color);
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+/* Footer Actions */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+/* ------------------------------------------------------------------ */
+/* --- Responsive Overrides (FIXED for small screens) --- */
+/* ------------------------------------------------------------------ */
+
+/* Tablet and Mobile adjustments (Below 980px) */
+@media (max-width: 980px) {
+    /* --- Layout Grid --- */
+    .layout-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar-filters {
+        position: static;
+        width: 100%;
+        display: none;
+        /* Hidden by default on mobile */
+    }
+
+    .sidebar-filters:not(.hidden-mobile) {
+        display: block;
+        /* Show when filters are toggled */
+    }
+
+    /* --- Header & Nav --- */
+    .site-header {
+        padding: 10px 20px;
+    }
+
+    .nav {
+        /* Mobile menu positioning */
+        position: absolute;
+        top: 60px;
+        right: 10px;
+        left: auto;
+        /* FIX: Dropdown background black, font white */
+        background-color: #000;
+        border-radius: 8px;
+        padding: 10px 20px;
+        width: auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        display: none; /* Controlled by JS and checked state */
+        z-index: 9999;
+    }
+
+    /* FIX: Show hamburger on mobile/tablet */
+    .hamburger {
+        display: flex; 
+    }
+
+    .nav-toggle:checked ~ .nav {
+        display: block;
+    }
+    
+    .nav-list {
+        flex-direction: column;
+        gap: 0;
+    }
+    /* FIX: Ensure links are visible inside the black dropdown */
+    .nav-list li a {
+        color: var(--text-light); 
+        padding: 8px 15px;
+    }
+
+    /* --- Search Bar --- */
+    .compact-search-bar {
+        /* Re-enable wrapping */
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .search-field-group,
+    .date-select-group {
+        flex-basis: 100%; /* Take full width */
+    }
+
+    .city-select,
+    #subCity,
+    .filter-toggle-btn {
+        flex-basis: calc(50% - 5px); /* Half width for city/filters */
+    }
+    
+    /* Ensure date inputs don't overflow */
+    .date-input {
+        min-width: 40%; 
+    }
+}
+
+/* Desktop Styles (Above 981px) */
+@media (min-width: 981px) {
+    /* FIX: Hide hamburger on desktop */
+    .hamburger {
+        display: none;
+    }
+    
+    /* Ensure desktop nav is visible and horizontal */
+    .nav {
+        display: block !important; 
+        position: static;
+        background: transparent;
+        padding: 0; /* Remove padding */
+    }
+
+    .nav-list {
+        display: flex;
+        flex-direction: row; /* Horizontal list */
+        gap: 1rem;
+    }
+}
+
+/* Smaller Mobile Adjustments (Below 600px, targeting 430px) */
+@media (max-width: 600px) {
+    .site-header {
+        padding: 10px;
+    }
+
+    /* --- Search Bar --- */
+    .compact-search-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 15px;
+    }
+
+    .search-field-group,
+    .date-select-group,
+    .city-select,
+    #subCity,
+    .filter-toggle-btn {
+        flex-basis: 100%; /* Full width stack */
+    }
+
+    .date-select-group {
+        flex-direction: column; /* Stack start/end time vertically */
+        align-items: flex-start;
+        padding: 10px;
+    }
+    
+    .date-select-group i {
+        margin-bottom: 5px;
+    }
+
+    .date-input {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .separator {
+        display: none;
+    }
+
+    /* --- Results Toolbar --- */
+    .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .sort-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* --- Vehicle Cards --- */
+    .result-container.list-view .vehicle-card {
+        flex-direction: column; /* List view becomes column stack on mobile */
+    }
+    
+    .result-container.list-view .card-image-wrap {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+
+/* Mobile Adjustments (Modal) */
+@media (max-width: 768px) {
+    .custom-modal {
+        margin: 10px;
+    }
+    
+    .modal-grid {
+        grid-template-columns: 1fr;
+        /* Mobile par single column */
+    }
+
+    .pricing-section {
+        border-left: none;
+        padding-left: 0;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+
+    .modal-actions {
+        justify-content: space-around;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .modal-actions button {
+        width: 100%;
+    }
+}  
+
+/* Add this to your vehicle_search_styles.css */
+
+.vehicle-card.booked-out {
+    /* Main container for a slight gray overlay */
+    opacity: 0.6; /* Dheere rang ke liye */
+    filter: grayscale(80%); /* Zyada gray effect ke liye optional */
+    pointer-events: none; /* Puri card par click disable karne ke liye */
+    position: relative;
+}
+
+/* Agar aap chahte hain ki 'Booked Out' button thoda dark ya alag dikhe */
+.vehicle-card.booked-out .book-btn {
+    background-color: #6c757d !important; 
+    border-color: #6c757d !important;
+    cursor: not-allowed;
+    color: #fff !important;
+}
+
+/* Agar aap image par koi overlay dikhana chahte hain */
+.vehicle-card.booked-out .card-image-wrap::after {
+    content: "BOOKED OUT"; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.4); 
+    color: white;
+    font-size: 1.5em;
+    font-weight: bold;
+    z-index: 5;
+}

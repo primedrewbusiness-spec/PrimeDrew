@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade Your Host Plan - PrimeDrew</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --standard-color: #3498db; /* Blue */
+            --premium-color: #9b59b6; /* Purple */
+            --locked-color: #95a5a6; /* Gray */
+            --success-color: #2ecc71;
+            --bg-color: #ecf0f1;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --light-text: #7f8c8d;
+            --border-radius: 15px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--light-text);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tier-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .tier-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            width: 350px;
+            box-shadow: var(--shadow);
+            border: 2px solid transparent;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .tier-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .tier-card.selected {
+            border-width: 3px;
+        }
+        .tier-card.standard.selected { border-color: var(--standard-color); }
+        .tier-card.premium.selected { border-color: var(--premium-color); }
+        
+        .badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .badge.current { background-color: var(--success-color); }
+        .badge.recommended { background-color: var(--premium-color); }
+        
+        .tier-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        .tier-card.standard .tier-icon { color: var(--standard-color); }
+        .tier-card.premium .tier-icon { color: var(--premium-color); }
+
+        .tier-card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .payout-rate {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .payout-rate span {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--light-text);
+        }
+        .tier-card.standard .payout-rate { color: var(--standard-color); }
+        .tier-card.premium .payout-rate { color: var(--premium-color); }
+
+        .features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        
+        .features li {
+            margin-bottom: 12px;
+            color: var(--light-text);
+            display: flex;
+            align-items: center;
+        }
+        
+        .features li i {
+            margin-right: 10px;
+            width: 20px;
+            font-size: 1.1rem;
+            color: var(--success-color);
+        }
+
+        .lock-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--locked-color);
+            cursor: not-allowed;
+            padding: 20px;
+        }
+        .lock-overlay .fa-lock { font-size: 2.5rem; margin-bottom: 15px; }
+        .lock-overlay p { font-weight: 600; font-size: 1rem; }
+
+        .actions {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn-update {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 300px;
+        }
+        
+        .btn-update:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .back-link {
+            text-decoration: none;
+            color: var(--light-text);
+            font-weight: 500;
+        }
+        .back-link:hover { color: var(--text-color); }
+        
+        input[type="radio"] { display: none; }
+        
+        @media (max-width: 768px) {
+            .tier-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .tier-card {
+                width: 100%;
+                max-width: 400px;
+            }
+            .header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Level Up Your Hosting</h1>
+            <p>Choose the plan that matches your goals. A higher tier means a bigger payout from every trip.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('set_host_tier') }}">
+            <input type="hidden" id="current_tier_value" value="{{ current_tier }}">
+
+            <div class="tier-container">
+                <label class="tier-card standard {% if current_tier == 70 %}selected{% endif %}">
+                    <input type="radio" name="commission_tier" value="70" {% if current_tier == 70 %}checked{% endif %}>
+                    
+                    {% if current_tier == 70 %}
+                    <div class="badge current">Your Plan</div>
+                    {% endif %}
+
+                    <div class="tier-icon"><i class="fas fa-motorcycle"></i></div>
+                    <h2>Standard</h2>
+                    <div class="payout-rate">70% <span>Payout</span></div>
+                    <ul class="features">
+                        <li><i class="fas fa-check-circle"></i> Best for flexibility</li>
+                        <li><i class="fas fa-check-circle"></i> Set your own schedule</li>
+                        <li><i class="fas fa-check-circle"></i> No minimum hours required</li>
+                    </ul>
+                </label>
+
+                <label class="tier-card premium {% if current_tier == 80 %}selected{% endif %}">
+                    <input type="radio" name="commission_tier" value="80" {% if current_tier == 80 %}checked{% endif %} {% if not can_access_80_tier %}disabled{% endif %}>
+                    
+                    {% if current_tier == 80 %}
+                        <div class="badge current">Your Plan</div>
+                    {% elif can_access_80_tier %}
+                        <div class="badge recommended">Recommended</div>
+                    {% endif %}
+
+                    <div class="tier-icon"><i class="fas fa-rocket"></i></div>
+                    <h2>Premium</h2>
+                    <div class="payout-rate">80% <span>Payout</span></div>
+                    <ul class="features">
+                        <li><i class="fas fa-check-circle"></i> Maximize your earnings</li>
+                        <li><i class="fas fa-check-circle"></i> Better search placement</li>
+                        <li><i class="fas fa-check-circle"></i> 30+ available hours/week</li>
+                    </ul>
+
+                    {% if not can_access_80_tier %}
+                    <div class="lock-overlay">
+                        <i class="fas fa-lock"></i>
+                        <p>List your first vehicle to unlock</p>
+                    </div>
+                    {% endif %}
+                </label>
+            </div>
+
+            <div class="actions">
+                <button type="submit" id="updateBtn" class="btn-update">Select a Plan</button>
+                <a href="{{ url_for('host_dashboard') }}" class="back-link">I'll decide later</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tierCards = document.querySelectorAll('.tier-card');
+            const updateBtn = document.getElementById('updateBtn');
+            const currentTier = document.getElementById('current_tier_value').value;
+
+            function updateUI(selectedCard) {
+                if (!selectedCard) return;
+                
+                const selectedValue = selectedCard.querySelector('input[type="radio"]').value;
+                const tierName = selectedCard.querySelector('h2').textContent;
+
+                // Update card selection style
+                tierCards.forEach(card => card.classList.remove('selected'));
+                selectedCard.classList.add('selected');
+                
+                // Update button text and style
+                if (selectedValue === currentTier) {
+                    updateBtn.textContent = `You are on the ${tierName} Plan`;
+                    updateBtn.style.backgroundColor = 'var(--success-color)';
+                } else {
+                    updateBtn.textContent = `Switch to ${tierName} Plan`;
+                    if (tierName === 'Standard') {
+                        updateBtn.style.backgroundColor = 'var(--standard-color)';
+                    } else {
+                        updateBtn.style.backgroundColor = 'var(--premium-color)';
+                    }
+                }
+            }
+
+            // Add click listeners to cards
+            tierCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const radio = card.querySelector('input[type="radio"]');
+                    if (radio && !radio.disabled) {
+                        radio.checked = true;
+                        updateUI(card);
+                    }
+                });
+            });
+
+            // Set initial state on page load
+            const initiallySelected = document.querySelector('.tier-card.selected');
+            if(initiallySelected) {
+                updateUI(initiallySelected);
+            }
+        });
+    </script>
+
+</body>
+</html>

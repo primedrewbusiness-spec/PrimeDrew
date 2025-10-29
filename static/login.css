@@ -1,0 +1,297 @@
+/* Custom CSS Variables */
+:root {
+    --color-primary: #1e40af; /* Dark Blue */
+    --color-secondary: #3b82f6; /* Bright Blue */
+    --color-bg-light: #f7f9fc;
+    --color-text-dark: #1f2937;
+    --color-text-muted: #6b7280;
+    --shadow-main: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --radius: 12px;
+    --vh: 1vh; /* Custom variable for mobile height fix */
+}
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--color-text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Layout Wrapper */
+.main-wrapper {
+    display: flex;
+    width: 100%;
+    flex-grow: 1;
+    min-height: calc(var(--vh, 1vh) * 100); 
+    background-color: #fff;
+}
+
+/* --- Left Visual Pane (Desktop Only) --- */
+.visual-pane {
+    width: 40%; 
+    display: none; 
+    position: relative;
+    background: linear-gradient(145deg, var(--color-primary) 0%, #2563eb 100%);
+    color: white;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; 
+}
+
+.logo-box {
+    text-align: center;
+    z-index: 10;
+    padding: 2rem;
+}
+
+.logo-box h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.logo-box p {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.logo-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+/* Decorative Circles (Animation) */
+.decor-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    background: #fff;
+    animation: pulse 10s infinite ease-in-out;
+}
+
+.circle-1 {
+    width: 400px; height: 400px; top: -100px; left: -100px; animation-delay: 1s;
+}
+
+.circle-2 {
+    width: 200px; height: 200px; bottom: -50px; right: -50px; animation-delay: 5s;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); } 50% { transform: scale(1.1); opacity: 0.2; } 100% { transform: scale(1); }
+}
+
+/* --- Right Form Pane --- */
+.form-pane {
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg-light);
+    padding: 2rem 1rem;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 3rem 2rem;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-main);
+}
+
+.small-link {
+    text-align: right;
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+    color: var(--color-text-muted);
+}
+.small-link a {
+    color: var(--color-secondary);
+    text-decoration: none;
+    font-weight: 600;
+}
+.alert-error{
+    color:red;
+}
+.login-box h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--color-text-muted);
+    margin-bottom: 2rem;
+}
+
+/* --- Form Styles --- */
+.login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-dark);
+}
+
+label i {
+    margin-right: 8px;
+    color: var(--color-secondary);
+}
+
+input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e0e7ff;
+    border-radius: var(--radius);
+    background-color: #f7faff;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Password Toggle Group Styling */
+.password-toggle-group {
+    position: relative;
+}
+
+.password-toggle-group input {
+    padding-right: 45px; /* Button ke liye space chhod dein */
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: color 0.2s;
+    font-size: 1.1rem;
+    z-index: 10;
+}
+.password-toggle:hover {
+    color: var(--color-primary);
+}
+
+.password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.forgot-link {
+    font-size: 0.85rem;
+    color: var(--color-secondary);
+    text-decoration: none;
+}
+.forgot-link:hover {
+    /* color: var(--color-secondary); */
+    text-decoration: underline;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--color-primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    margin-top: 1rem;
+}
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+/* --- Social Login and Divider --- */
+.social-divider {
+    text-align: center;
+    margin: 2rem 0 1.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    position: relative;
+}
+.social-divider::before,
+.social-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: #e5e7eb;
+}
+.social-divider::before {
+    left: 0;
+}
+.social-divider::after {
+    right: 0;
+}
+
+.social-logins {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-social {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: var(--radius);
+    border: 1px solid #d1d5db;
+    background: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-social i {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+.btn-social.google:hover {
+    color: #DB4437;
+    border-color: #DB4437;
+}
+.btn-social.facebook:hover {
+    color: #1877F2;
+    border-color: #1877F2;
+}
+
+/* --- Responsive Layout --- */
+@media (min-width: 1024px) {
+    .visual-pane {
+        display: flex;
+        width: 40%;
+    }
+    .form-pane {
+        width: 60%;
+        padding: 4rem 2rem;
+    }
+}

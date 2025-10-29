@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PrimeDrew | My Bookings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" /> 
+    
+    <style>
+        /* --- Root Variables for Booking Page --- */
+        :root {
+            --color-primary: #0453ff;
+            --color-success: #28a745;
+            --color-danger: #dc3545;
+            --color-text-dark: #343a40;
+            --color-text-light: #fff; /* Added for consistency */
+            --color-bg-light: #f8f9fa; /* Added for consistency */
+            --color-gold: #ffc107; /* Added for review stars */
+        }
+        
+        /* ====================================================
+            HEADER/NAV FIXES (To match index/about/search.html)
+            ==================================================== */
+        .site-header {
+            background-color: #000; /* Black Header */
+            color: var(--color-text-light);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            height: 60px; 
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            color: var(--color-primary); 
+            font-weight: 900;
+            font-size: 28px;
+            margin-left: 0; 
+        }
+
+        .pd-logo img {
+            height: 40px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+
+        /* Desktop Navigation Links */
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 1rem; 
+        }
+
+        .nav-list li a {
+            color: var(--color-text-light);
+            padding: 10px 15px;
+            display: block;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-list li a:hover {
+            background-color: rgba(255, 255, 255, 0.1); /* Subtle white hover on black */
+            border-radius: 6px;
+        }
+
+        /* Hamburger Styles */
+        .nav-toggle { display: none; }
+        
+        .hamburger {
+            display: none; /* Hidden by default on desktop, shown by media query */
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            padding: 10px;
+            z-index: 10002;
+        }
+
+        .hamburger .bar {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 0 auto;
+            background-color: var(--color-text-light); /* White bars */
+            transition: all 0.3s ease-in-out;
+        }
+
+        .nav-toggle:checked + .hamburger .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-toggle:checked + .hamburger .bar:nth-child(2) { opacity: 0; width: 0; }
+        .nav-toggle:checked + .hamburger .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        
+        /* Mobile Navigation Dropdown */
+        .nav {
+            /* Desktop style is static/visible */
+        }
+        
+        /* Media Queries for Hamburger and Nav Visibility */
+        @media (max-width: 980px) {
+            .hamburger {
+                display: flex; /* Show hamburger on mobile */
+            }
+            .nav {
+                position: absolute;
+                top: 60px;
+                right: 10px;
+                background-color: #000; /* Black dropdown background */
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+                display: none; /* Hide by default */
+                z-index: 9999;
+            }
+            .nav-list {
+                flex-direction: column; /* Vertical list on mobile */
+                gap: 0;
+            }
+            .nav-toggle:checked ~ .nav {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 981px) {
+            .hamburger {
+                display: none; /* Hide hamburger on desktop */
+            }
+            .nav {
+                display: block !important;
+                position: static;
+                background: transparent;
+            }
+        }
+        /* ====================================================
+            END HEADER/NAV FIXES
+            ==================================================== */
+        
+        /* General Layout */
+        .bookings-container { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 20px; 
+        }
+        h1 { 
+            color: var(--color-primary); 
+            border-bottom: 3px solid #e9ecef; 
+            padding-bottom: 10px; 
+            margin-bottom: 30px; 
+            font-size: 2.2em;
+        }
+        
+        /* --- Booking Card Grid --- */
+        .bookings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .booking-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+            border: 1px solid #ddd;
+        }
+        
+        .booking-card:hover { transform: translateY(-3px); }
+
+        /* Vehicle Image and Host Info */
+        .vehicle-visual {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+        .vehicle-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .host-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        /* Card Header & Status */
+        .card-header-status {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .booking-id { font-size: 1.1em; font-weight: 600; color: #6c757d; }
+
+        .status-pill { padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85em; text-transform: capitalize; }
+        .status-confirmed { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        
+        /* --- NEW: Deposit Refund Status Pill Styles --- */
+        .status-deposit-pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .status-deposit-processed { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-deposit-denied { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        /* ------------------------------------------- */
+
+
+        /* Card Body & Details */
+        .card-body { padding: 20px; flex-grow: 1; }
+        .vehicle-title { color: var(--color-primary); font-size: 1.5em; margin-top: 0; margin-bottom: 5px; }
+        
+        .booking-dates {
+            font-size: 0.95em;
+            color: #555;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .date-item { display: flex; align-items: center; gap: 8px; }
+        .date-range { font-weight: 600; color: #343a40; }
+
+        /* Key-Value (KV) Pair List */
+        .detail-list { list-style: none; padding: 0; margin: 0; }
+        .detail-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 1em; }
+        .detail-list li:last-child { border-bottom: none; }
+        .detail-list li span { color: #6c757d; }
+        .detail-list li strong { color: var(--color-text-dark); font-weight: 600; }
+
+        /* Card Footer & Price */
+        .card-footer-price {
+            background-color: #e9f5ff;
+            padding: 15px 20px;
+            border-top: 2px solid var(--color-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .total-label { font-weight: 600; color: #343a40; font-size: 1.1em; }
+        .total-price { color: var(--color-success); font-size: 1.8em; font-weight: bold; }
+
+        /* Action Button */
+        .card-actions { 
+            padding: 15px 20px; 
+            border-top: 1px solid #f0f0f0; 
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end; /* Align buttons to the right */
+            align-items: center;
+        }
+        .cancel-btn { 
+            background-color: var(--color-danger); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: background-color 0.2s;
+            font-size: 0.9em;
+        }
+        .cancel-btn:hover:not(:disabled) { background-color: #c82333; }
+        .cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        /* --- NEW: Review Button Style --- */
+        .review-btn {
+            background-color: var(--color-primary); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: background-color 0.2s;
+            font-size: 0.9em;
+        }
+        .review-btn:hover { background-color: #0033aa; }
+        .review-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        /* No Bookings Message */
+        .no-bookings { 
+            text-align: center; 
+            padding: 60px; 
+            background-color: #fff;
+            border-radius: 12px;
+            color: #6c757d; 
+            font-size: 1.2em; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .no-bookings .btn-primary {
+            margin-top: 20px;
+            background-color: var(--color-primary); 
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: white !important; 
+            display: inline-block;
+        }
+        
+        /* --- MODAL Styles (for Review) --- */
+        .review-stars {
+            font-size: 30px;
+            color: #ccc; /* Default color for stars */
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .review-stars i {
+            cursor: pointer;
+            transition: color 0.1s;
+        }
+        
+        /* Star hover and selected color */
+        .review-stars i.rated,
+        .review-stars i:hover,
+        .review-stars i:hover ~ i {
+            color: var(--color-gold);
+        }
+        
+        .review-form-group {
+            margin-bottom: 15px;
+        }
+        
+        .review-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .review-form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .review-modal-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Mobile adjustment */
+        @media (max-width: 600px) {
+            .bookings-grid { grid-template-columns: 1fr; }
+            .card-footer-price { flex-direction: column; align-items: flex-start; }
+            .total-price { margin-top: 5px; }
+            .card-actions { 
+                flex-direction: column;
+                justify-content: center; 
+                align-items: stretch;
+            }
+            .cancel-btn, .review-btn, .btn-primary {
+                width: 100%; /* Full width buttons on mobile */
+            }
+        }
+    </style>
+    
+    {% macro format_inr(amount) %}
+        ₹{{ "{:,.0f}".format(amount) }}
+    {% endmacro %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="logo-group">
+            <div class="pd-logo"><img src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}" alt="PrimeDrew Logo" id="imglogo"></div>
+            <div class="logo-name">PrimeDrew</div>
+        </div>
+        
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" />
+        <label for="nav-toggle" class="hamburger" aria-label="Toggle navigation" role="button" tabindex="0">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </label>
+        
+        <nav class="nav" aria-label="Primary">
+            <ul class="nav-list">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('search_page') }}"> Find Rides</a></li>
+                <li><a href="{{ url_for('dashboard') }}"> Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}"> Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="bookings-container">
+            <h1><i class="fas fa-history"></i> My Ride Booking History</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div style="margin-bottom: 20px;">
+                        {% for category, message in messages %}
+                            <div class="flash-message flash-{{ category }}" 
+                                 style="background-color: {% if category == 'success' %}var(--color-success){% else %}var(--color-danger){% endif %}; 
+                                               color: white; 
+                                               padding: 10px; 
+                                               border-radius: 5px;">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% if bookings %}
+                <div class="bookings-grid">
+                    {% for booking in bookings %}
+                        <article class="booking-card" 
+                                 data-start-date="{{ booking.start_date }}" 
+                                 data-end-date="{{ booking.end_date }}">
+                            
+                            <div class="vehicle-visual">
+                                <img src="{{ booking.vehicle_image_url }}" alt="{{ booking.vehicle_name }}">
+                                <span class="host-badge"><i class="fas fa-user-circle"></i> Host: {{ booking.host_name }}</span>
+                            </div>
+                            
+                            <div class="card-header-status">
+                                <span class="booking-id">Booking #{{ booking.booking_id }}</span>
+                                <span class="status-pill status-{{ booking.status | lower }}">{{ booking.status }}</span>
+                            </div>
+
+                            <div class="card-body">
+                                <h2 class="vehicle-title">{{ booking.vehicle_name }}</h2>
+                                
+                                <div class="booking-dates">
+                                    <div class="date-item">
+                                        <i class="fas fa-clock"></i> 
+                                        <strong>Duration:</strong> 
+                                        <span class="date-range duration-display" data-start="{{ booking.start_date }}" data-end="{{ booking.end_date }}">Calculating...</span>
+                                    </div>
+                                    <div class="date-item">
+                                        <i class="far fa-calendar-alt"></i> 
+                                        <strong>Start:</strong> 
+                                        <span class="date-range">{{ booking.start_date }}</span>
+                                    </div>
+                                    <div class="date-item">
+                                        <i class="far fa-calendar-alt"></i> 
+                                        <strong>End:</strong> 
+                                        <span class="date-range">{{ booking.end_date }}</span>
+                                    </div>
+                                </div>
+                                
+                                <ul class="detail-list">
+                                    <li><span>Booked At</span><strong>{{ booking.booked_at }}</strong></li>
+                                    
+                                    <li>
+                                        <span>Refundable Deposit ({{ format_inr(booking.deposit_amount) }})</span>
+                                        <span class="status-pill status-deposit-{{ booking.deposit_refund_status | lower }}">
+                                            <i class="fas fa-{{ 'check-circle' if booking.deposit_refund_status == 'Processed' else 'clock' }}"></i> 
+                                            {{ booking.deposit_refund_status }}
+                                        </span>
+                                    </li>
+                                    {% if booking.status == 'Cancelled' and booking.refund_status == 'Pending' %}
+                                        <li><span>Booking Refund</span><strong><i class="fas fa-hourglass-half"></i> Processing</strong></li>
+                                    {% elif booking.status == 'Cancelled' and booking.refund_status == 'Processed' %}
+                                        <li><span>Booking Refund</span><strong><i class="fas fa-check-circle"></i> Processed</strong></li>
+                                    {% else %}
+                                        <li><span>Price Verified</span><strong><i class="fas fa-check-circle" style="color:var(--color-success);"></i> Yes</strong></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            
+                            <div class="card-footer-price">
+                                <span class="total-label">Total Amount Paid</span>
+                                <span class="total-price">{{ format_inr(booking.total_price) }}</span>
+                            </div>
+
+                            <div class="card-actions">
+                                {% if booking.reviewable %}
+                                <button 
+                                    class="review-btn" 
+                                    data-booking-id="{{ booking.booking_id }}" 
+                                    data-vehicle-name="{{ booking.vehicle_name }}"
+                                    data-vehicle-id="{{ booking.vehicle_db_id }}">
+                                    ⭐ Leave a Review
+                                </button>
+                                {% endif %}
+                                
+                                {% if booking.status == 'Confirmed' %}
+                                    <a href="{{ url_for('download_receipt', booking_id=booking.booking_id) }}" target="_blank" class="btn-primary" style="text-decoration: none; padding: 10px 20px; font-size: 0.9em; font-weight: 600;">
+                                        <i class="fas fa-file-download"></i> Download Receipt
+                                    </a>
+
+                                    <button 
+                                        class="cancel-btn" 
+                                        data-booking-id="{{ booking.booking_id }}"
+                                    >
+                                        <i class="fas fa-times-circle"></i> Cancel Booking
+                                    </button>
+                                {% elif booking.status == 'Cancelled' %}
+                                    <span style="color: var(--color-danger); font-weight: 600; font-size: 0.9em;"><i class="fas fa-undo"></i> Cancellation in Process/Completed.</span>
+                                {% else %}
+                                    <span style="color: #6c757d; font-size: 0.9em; font-style: italic;">
+                                        Action not available.
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="no-bookings">
+                    <p><i class="fas fa-sad-tear fa-3x"></i></p>
+                    <p>You haven't booked any rides yet.</p>
+                    <p><a href="{{ url_for('search_page') }}" class="btn-primary">Start Booking Now</a></p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+    
+    <dialog id="reviewModal" class="custom-modal"></dialog>
+    
+    <script>
+    
+    // Global helper for elements
+    const el = id => document.getElementById(id);
+    const qs = (sel, root = document) => root.querySelector(sel);
+    const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+    
+    // --- JavaScript Duration Calculation (Updated to include days) ---
+    function formatDuration(startStr, endStr) {
+        // Replace space with 'T' for robust Date parsing of YYYY-MM-DD HH:MM format
+        const startDt = new Date(startStr.replace(' ', 'T'));
+        const endDt = new Date(endStr.replace(' ', 'T'));
+        
+        const durationMs = endDt - startDt;
+        if (durationMs <= 0 || isNaN(durationMs)) {
+            return 'N/A';
+        }
+
+        const totalSeconds = Math.floor(durationMs / 1000);
+        const days = Math.floor(totalSeconds / (3600 * 24)); // Calculate days
+        const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600); // Remaining hours
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        let output = [];
+        if (days > 0) {
+            output.push(`${days} Day${days > 1 ? 's' : ''}`);
+        }
+        if (hours > 0) {
+            output.push(`${hours} Hour${hours > 1 ? 's' : ''}`);
+        }
+        if (minutes > 0) {
+            output.push(`${minutes} Min`);
+        }
+        
+        return output.join(' and ') || 'Less than 1 Min';
+    }
+    
+    // --- NEW: Review Submission Logic ---
+    function showReviewModal(bookingId, vehicleName) {
+        const modal = el('reviewModal');
+        let selectedRating = 0; // State variable for the rating
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="review-modal-header">
+                    <h2>Rate Your Ride</h2>
+                    <p class="text-muted">Booking #${bookingId}: ${vehicleName}</p>
+                </div>
+                
+                <form id="reviewForm">
+                    <input type="hidden" id="reviewBookingId" value="${bookingId}">
+                    
+                    <div class="review-form-group" style="text-align: center;">
+                        <label>Your Rating:</label>
+                        <div id="starRating" class="review-stars">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="review-form-group">
+                        <label for="reviewComment">Comments (Optional):</label>
+                        <textarea id="reviewComment" maxlength="500" placeholder="Tell us about your experience..."></textarea>
+                    </div>
+                    
+                    <div class="modal-actions" style="margin-top: 20px; justify-content: space-between;">
+                        <button class="btn-secondary" type="button" onclick="el('reviewModal').close()">Cancel</button>
+                        <button class="review-btn" type="submit" id="submitReviewBtn" disabled>Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        modal.showModal();
+
+        // 1. Star Rating Functionality
+        const stars = qsa('#starRating i');
+        const submitBtn = el('submitReviewBtn');
+
+        function updateStars(rating) {
+            selectedRating = rating;
+            stars.forEach(star => {
+                const starRating = parseInt(star.dataset.rating);
+                if (starRating <= rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas', 'rated');
+                } else {
+                    star.classList.remove('fas', 'rated');
+                    star.classList.add('far');
+                }
+            });
+            submitBtn.disabled = rating === 0;
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('click', (e) => {
+                const rating = parseInt(e.currentTarget.dataset.rating);
+                updateStars(rating);
+            });
+            // Handle hover effect only for visual feedback, click sets the state
+            star.addEventListener('mouseover', (e) => {
+                const rating = parseInt(e.currentTarget.dataset.rating);
+                stars.forEach(s => {
+                    const sRating = parseInt(s.dataset.rating);
+                    if (sRating <= rating) {
+                        s.style.color = 'var(--color-gold)';
+                    } else if (!s.classList.contains('rated')) {
+                        s.style.color = '#ccc';
+                    }
+                });
+            });
+            star.addEventListener('mouseout', () => {
+                stars.forEach(s => s.style.color = s.classList.contains('rated') ? 'var(--color-gold)' : '#ccc');
+            });
+        });
+
+
+        // 2. Form Submission Handler
+        el('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (selectedRating === 0) {
+                alert('Please select a rating before submitting.');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            
+            const reviewData = {
+                booking_id: bookingId,
+                rating: selectedRating,
+                comment: el('reviewComment').value.trim()
+            };
+
+            try {
+                const response = await fetch('/api/submit_review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reviewData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert(`Success: ${result.message}`);
+                    modal.close();
+                    window.location.reload(); // Reload to update status and rating
+                } else {
+                    alert(`Submission Failed: ${result.message}`);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Submit Review';
+                }
+            } catch (error) {
+                console.error('Review API Error:', error);
+                alert('A network error occurred. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit Review';
+            }
+        });
+    }
+    
+    // --- Main DOM Content Loaded Handler ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Calculate and display durations
+        const durationElements = document.querySelectorAll('.duration-display');
+        durationElements.forEach(el => {
+            const startStr = el.dataset.start;
+            const endStr = el.dataset.end;
+            el.textContent = formatDuration(startStr, endStr);
+        });
+        
+        // 2. Review Button Logic
+        const reviewButtons = document.querySelectorAll('.review-btn');
+        reviewButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const bookingId = e.currentTarget.dataset.bookingId;
+                const vehicleName = e.currentTarget.dataset.vehicleName;
+                showReviewModal(bookingId, vehicleName);
+            });
+        });
+        
+        // 3. Cancellation Logic
+        const cancelButtons = document.querySelectorAll('.cancel-btn');
+
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const bookingId = e.currentTarget.dataset.bookingId;
+                
+                const confirmCancel = confirm(`Are you sure you want to cancel Booking #${bookingId}? 
+This action may incur a cancellation fee. Check terms for details.`);
+
+                if (!confirmCancel) {
+                    return; // User aborted the cancellation
+                }
+
+                e.currentTarget.disabled = true;
+                e.currentTarget.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+
+                try {
+                    const response = await fetch(`/api/cancel_booking/${bookingId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert(`Booking #${bookingId} successfully cancelled! A refund of ₹${result.refund_amount || 'N/A'} will be processed. Fee: ₹${result.fee || 'N/A'}.`);
+                        window.location.reload(); 
+                    } else {
+                        alert(`Cancellation Failed: ${result.message || 'Unknown error occurred.'}`);
+                        e.currentTarget.disabled = false;
+                        e.currentTarget.innerHTML = '<i class="fas fa-times-circle"></i> Cancel Booking';
+                    }
+
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                    alert('A network error occurred during cancellation. Please try again.');
+                    e.currentTarget.disabled = false;
+                    e.currentTarget.innerHTML = '<i class="fas fa-times-circle"></i> Cancel Booking';
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

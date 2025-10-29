@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vehicle Rental — Registration</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='reg.css') }}" />
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header" role="banner" aria-label="Site header">
+        <h1 class="brand">Vehicle Rental System</h1>
+        <p class="subtitle">Create your account</p>
+    </header>
+
+    <main id="main" class="container" role="main">
+        <form id="registrationForm" class="form" action="{{ url_for('register') }}" method="post" novalidate enctype="multipart/form-data" onsubmit="return handleRegistration(event)">
+            <h2 class="form__title">Registration</h2>
+
+            <input type="hidden" name="firebase_uid" id="firebase_uid_input">
+            <input type="hidden" name="phone" id="phone_number_input_hidden">
+
+            {% if error %}
+            <p style="color: #FF6B6B; background: #FFEBEB; padding: 10px; border-radius: 5px; font-weight: 600;">{{ error }}</p>
+            {% endif %}
+
+            <fieldset class="section" id="stage1_phone">
+                <legend class="section__legend">Mobile Verification (Step 1 of 2)</legend>
+                
+                <div class="otp-center-group">
+                    <div class="field">
+                        <label for="phone_number" class="label">Mobile Number</label>
+                        <input id="phone_number" class="control" type="tel" placeholder="10 digit mobile number" pattern="^\d{10}$" title="Enter 10 digit mobile number" required />
+                        <p class="hint">Verification is required before filling other details.</p>
+                    </div>
+
+                    <div id="otp_container" style="display:none;" class="field">
+                        <label for="otp_code" class="label">Enter OTP</label>
+                        <input id="otp_code" type="text" placeholder="6 digit code" maxlength="6" class="control">
+                    </div>
+                    
+                    <div id="recaptcha-container" style="margin-top: 20px;"></div>
+                    <p id="authMessage" class="hint" style="color: #5aa7ff; font-weight: 600; text-align: center;">Click "Send OTP" to begin verification.</p>
+                    
+                    <div class="actions" style="margin-top: 10px; justify-content: center;">
+                        <button type="button" class="btn" id="sendOtpBtn" onclick="sendOTP()">Send OTP</button>
+                        <button type="button" class="btn btn--ghost" id="verifyOtpBtn" style="display:none;" onclick="verifyOTP()">Verify Code & Proceed</button>
+                    </div>
+                </div>
+            </fieldset>
+            
+            <div id="stage2_details" style="display:none;">
+                <p style="text-align: center; color: green; font-weight: bold; margin-bottom: 15px;">✅ Mobile Verified! Complete your registration below.</p>
+
+                <fieldset class="section">
+                    <legend class="section__legend">Account</legend>
+                    <div class="grid grid--2">
+                        <div class="field">
+                            <label for="role" class="label">I am a</label>
+                            <select id="role" name="role" class="control" required>
+                                <option value="" disabled selected>Choose role</option>
+                                <option value="renter">Renter</option>
+                                <option value="host">Host (list vehicles)</option>
+                            </select>
+                            <p class="hint">Select how you’ll use the platform.</p>
+                        </div>
+
+                        <div class="field">
+                            <label for="email" class="label">Email</label>
+                            <input id="email" name="email" class="control" type="email" inputmode="email" autocomplete="email" required />
+                            <p class="hint">We’ll send a verification link.</p>
+                        </div>
+
+                        <div class="field">
+                            <label for="password" class="label">Password</label>
+                            <div class="password-field-container"> 
+                                <input
+                                    id="password"
+                                    name="password"
+                                    class="control"
+                                    type="password"
+                                    required
+                                    minlength="8"
+                                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
+                                    aria-describedby="pwRules"
+                                    autocomplete="new-password"
+                                />
+                                <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('password')">
+                                    👁️
+                                </button>
+                            </div>
+                            <p id="pwRules" class="hint">Min 8 chars with upper, lower, number, symbol.</p>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="section">
+                    <legend class="section__legend">Personal details</legend>
+                    <div class="grid grid--3">
+                        <div class="field">
+                            <label for="firstName" class="label">First name</label>
+                            <input id="firstName" name="firstName" class="control" type="text" autocomplete="given-name" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="lastName" class="label">Last name</label>
+                            <input id="lastName" name="lastName" class="control" type="text" autocomplete="family-name" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="dob" class="label">Date of birth</label>
+                            <input id="dob" name="dob" class="control" type="date" required />
+                            <p class="hint">You must be 18+ to rent/host.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid--2">
+                        <div class="field">
+                            <label for="address1" class="label">Address line 1</label>
+                            <input id="address1" name="address1" class="control" type="text" autocomplete="address-line1" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="address2" class="label">Address line 2 (optional)</label>
+                            <input id="address2" name="address2" class="control" type="text" autocomplete="address-line2" />
+                        </div>
+
+                        <div class="field">
+                            <label for="city" class="label">City</label>
+                            <input id="city" name="city" class="control" type="text" autocomplete="address-level2" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="state" class="label">State</label>
+                            <input id="state" name="state" class="control" type="text" autocomplete="address-level1" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="pincode" class="label">PIN code</label>
+                            <input
+                                id="pincode"
+                                name="pincode"
+                                class="control"
+                                type="text"
+                                inputmode="numeric"
+                                pattern="^\d{6}$"
+                                title="6 digit PIN code"
+                                autocomplete="postal-code"
+                                required
+                            />
+                        </div>
+                        
+                        <div class="field">
+                            <label for="kyc_document" class="label">Upload Driving Licence</label>
+                            <input 
+                                id="kyc_document" 
+                                name="kyc_document" 
+                                class="control" 
+                                type="file" 
+                                accept=".png,.jpg,.jpeg,.pdf"
+                                required
+                            />
+                            <p class="hint">Max 2MB. Required for all accounts.</p>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="section">
+                    <legend class="section__legend">Driving details</legend>
+                    <div class="grid grid--3">
+                        <div class="field">
+                            <label for="dlNumber" class="label">Licence number</label>
+                            <input
+                                id="dlNumber"
+                                name="dlNumber"
+                                class="control"
+                                type="text"
+                                pattern="^[A-Za-z0-9\- ]{8,20}$"
+                                title="8–20 characters, letters/numbers/hyphen/space"
+                                required
+                            />
+                        </div>
+
+                        <div class="field">
+                            <label for="dlExpiry" class="label">Licence expiry</label>
+                            <input id="dlExpiry" name="dlExpiry" class="control" type="date" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="experience" class="label">Years of driving</label>
+                            <input id="experience" name="experience" class="control" type="number" min="0" max="60" step="1" value="0" />
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="section section--terms">
+                    <label class="choice checkbox required">
+                        <input type="checkbox" name="terms" required>
+                        <span>I agree to the <a href="#" class="link">Terms & Conditions</a> and <a href="#" class="link">Privacy Policy</a>.</span>
+                    </label>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn">Create account</button>
+                    <button type="reset" class="btn btn--ghost">Reset</button>
+                </div>
+            </div> </form>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <small>© 2025 Vehicle Rental System</small>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, getIdToken } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+
+        const firebaseConfig = { /* Your Config */
+            apiKey: "AIzaSyA5jmGB8WQ3kaj2mkNE4V10bqwGLr9VBTo",
+            authDomain: "vehicle-rent-50cc6.firebaseapp.com",
+            projectId: "vehicle-rent-50cc6",
+            storageBucket: "vehicle-rent-50cc6.appspot.com",
+            messagingSenderId: "587468145475",
+            appId: "1:587468145475:web:2395afe94822328241e5f6",
+            measurementId: "G-6LE6WTXCL0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        let confirmationResult;
+        
+        const phoneInput = document.getElementById('phone_number');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const otpContainer = document.getElementById('otp_container');
+        const otpInput = document.getElementById('otp_code');
+        const authMessage = document.getElementById('authMessage');
+        const stage1 = document.getElementById('stage1_phone');
+        const stage2 = document.getElementById('stage2_details');
+        const hiddenPhoneInput = document.getElementById('phone_number_input_hidden');
+        const hiddenUIDInput = document.getElementById('firebase_uid_input');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+                'size': 'normal',
+                'callback': (response) => { authMessage.innerText = "reCAPTCHA solved. Click 'Send OTP'."; },
+                'expired-callback': () => { authMessage.innerText = "reCAPTCHA expired. Click 'Send OTP' again."; sendOtpBtn.disabled = false; }
+            }, auth);
+            recaptchaVerifier.render().catch(error => console.error("reCAPTCHA rendering failed:", error));
+        });
+
+        window.sendOTP = async function() {
+            if (!phoneInput.checkValidity()) { phoneInput.reportValidity(); return; }
+            const phoneNumberValue = phoneInput.value;
+            
+            authMessage.innerText = "Checking number...";
+            sendOtpBtn.disabled = true;
+
+            // NEW: Check if phone exists before sending OTP
+            try {
+                const response = await fetch('/api/check-phone-exists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phoneNumberValue })
+                });
+
+                const data = await response.json();
+
+                if (data.exists) {
+                    authMessage.style.color = '#FF6B6B';
+                    authMessage.innerText = data.message;
+                    sendOtpBtn.disabled = false;
+                    return; // Stop the process
+                }
+            } catch (error) {
+                console.error("Error checking phone:", error);
+                authMessage.style.color = '#FF6B6B';
+                authMessage.innerText = "Could not verify phone number. Please try again.";
+                sendOtpBtn.disabled = false;
+                return;
+            }
+            // --- End of new check ---
+            
+            const phoneNumberWithCountryCode = "+91" + phoneNumberValue;
+            authMessage.style.color = '#5aa7ff'; // Reset color
+            authMessage.innerText = "Sending OTP...";
+
+            try {
+                confirmationResult = await signInWithPhoneNumber(auth, phoneNumberWithCountryCode, window.recaptchaVerifier);
+                authMessage.innerText = "OTP sent! Enter the code below and verify.";
+                verifyOtpBtn.style.display = 'inline-block'; 
+                sendOtpBtn.style.display = 'none'; 
+                phoneInput.readOnly = true; 
+                otpContainer.style.display = 'block';
+            } catch (error) {
+                authMessage.innerText = `Error: ${error.message}. Please retry.`;
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.style.display = 'inline-block';
+                verifyOtpBtn.style.display = 'none';
+                window.recaptchaVerifier.render().catch(e => console.error("Recaptcha reset error:", e));
+            }
+        }
+
+        window.verifyOTP = async function() {
+            const code = otpInput.value;
+            if (!code || code.length !== 6) { alert("Please enter the 6-digit OTP."); return; }
+            authMessage.innerText = "Verifying code...";
+            verifyOtpBtn.disabled = true;
+
+            try {
+                const result = await confirmationResult.confirm(code);
+                const user = result.user;
+                const idToken = await getIdToken(user);
+                
+                hiddenUIDInput.value = user.uid;
+                hiddenPhoneInput.value = phoneInput.value;
+                
+                stage1.style.display = 'none';
+                stage2.style.display = 'block';
+
+                authMessage.innerText = "✅ Mobile Verified! Complete your details below.";
+
+            } catch (error) {
+                alert("Invalid code. Please check the OTP or refresh to restart verification.");
+                verifyOtpBtn.disabled = false;
+            }
+        }
+
+        window.handleRegistration = function(event) {
+            if (!document.getElementById('firebase_uid_input').value) {
+                event.preventDefault();
+                alert("Security Error: Phone verification required. Please restart the process.");
+                return false;
+            }
+            
+            // Simplified validation for file upload - now required for everyone
+            const kycFile = document.getElementById('kyc_document');
+            if (kycFile.files.length === 0) {
+                event.preventDefault();
+                alert("Uploading a Driving Licence document is required for all users.");
+                kycFile.focus();
+                return false;
+            }
+
+            // Check if all other required fields in stage2 are filled
+            const form = document.getElementById('registrationForm');
+            if (!form.checkValidity()) {
+                // Let the browser handle showing which fields are invalid
+                form.reportValidity();
+                event.preventDefault();
+                return false;
+            }
+
+            return true;
+        }
+
+        window.togglePasswordVisibility = function(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleButton = passwordInput.nextElementSibling;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.innerText = '🔒';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.innerText = '👁️';
+            }
+        }
+    </script>
+</body>
+</html>

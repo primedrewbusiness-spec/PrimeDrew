@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us — PrimeDrew</title>
+    <meta name="description" content="Contact PrimeDrew for vehicle hosting support, rental assistance, or general inquiries." />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /*
+        ====================================================
+        ROOT VARIABLES (Copied from your existing CSS)
+        ====================================================
+        */
+        :root {
+            --color-primary: #0453ff; /* Brand Blue */
+            --color-secondary: #e60000; /* Brand Red */
+            --color-bg: #f9fbfd; /* Light background */
+            --color-panel: #ffffff; /* White card/panel */
+            --color-border: #e0e7f3; /* Light border */
+            --color-text-dark: #1f2937;
+            --color-text-muted: #6b7280;
+            --color-success: #1dbf73;
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius-lg: 12px;
+            --light-blue: #0044cc; /* Custom variable for hover states */
+        }
+
+        /* ====================================================
+        BASE STYLES (Copied from your existing CSS)
+        ====================================================
+        */
+        * { margin: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--color-bg); 
+            color: var(--color-text-dark); 
+            line-height: 1.6;
+        }
+        main { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            min-height: calc(100vh - 60px); 
+        }
+
+        /* --- Site Header/Nav Styles (FIXED for Visibility) --- */
+        .site-header {
+            position: sticky; top: 0; z-index: 10000; display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: #000; color: #fff; height: 60px;
+        }
+        .logo-group { display: flex; align-items: center; gap: 8px; }
+        .pd-logo { height: 40px; width: 40px; }
+        #imglogo { width: 100%; height: 100%; border-radius: 50%; }
+        .logo-name { color: var(--color-primary); font-weight: 900; font-size: 28px; margin-left: 1rem; }
+        
+        .nav-toggle { display: none; }
+        .hamburger { display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; cursor: pointer; padding: 10px; z-index: 10002; }
+        
+        /* FIX: Hamburger bars made white for visibility on black header */
+        .hamburger .bar { 
+            height: 2px; 
+            width: 100%; 
+            background: #fff; /* Changed from var(--color-panel) to #fff for consistency on black */
+            border-radius: 2px; 
+            transition: transform .25s ease, opacity .2s ease, width .25s ease; 
+        }
+
+        .nav-toggle:checked + .hamburger .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-toggle:checked + .hamburger .bar:nth-child(2) { opacity: 0; width: 0; }
+        .nav-toggle:checked + .hamburger .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        
+        .nav { 
+            position: absolute; 
+            top: 60px; 
+            right: 10px; 
+            background: black; /* White background for the dropdown */
+            border: 1px solid var(--color-border); 
+            border-radius: 8px; 
+            padding: 10px 20px; 
+            opacity: 0; 
+            transform: translateY(-10px); 
+            pointer-events: none; 
+            transition: opacity .3s ease, transform .3s ease; 
+            z-index: 10001; 
+        }
+        
+        /* FIX: Vertical list for mobile */
+        .nav-list { 
+            display: flex; 
+            flex-direction: column; /* Changed to column for mobile */
+            list-style-type:none; 
+            gap: 0; /* Changed gap for mobile list */
+        }
+        
+        /* FIX: Mobile dropdown links are dark text on white background */
+        .nav-list a { 
+            display: block; 
+            padding: 10px 20px; 
+            color: white; /* Changed from #fff to dark text color */
+            text-decoration: none; 
+            font-weight: 600;
+        }
+        
+        /* FIX: Mobile hover state */
+        .nav-list a:hover { 
+            background: #e5e7eb; /* Light gray hover on white background */
+            border-radius: 6px;
+        }
+
+        /* Keep the contact link style in the HTML but ensure the general CSS works */
+        
+        .nav-toggle:checked ~ .nav { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        @media (min-width: 800px) {
+            .hamburger { display: none; }
+            .nav { position: static; opacity: 1; transform: none; pointer-events: auto; background: transparent; padding: 0; border-radius: 0; border: none;}
+            
+            /* Desktop styles */
+            .nav-list { flex-direction: row; margin: 0; gap: 1rem; }
+            
+            /* Desktop links are white on black header */
+            .nav-list a { 
+                color: #fff; 
+            }
+            .nav-list a:hover { 
+                background: rgba(255, 255, 255, .1); 
+                border-radius: 6px;
+            }
+        }
+        /* ------------------------------------------------ */
+
+        /*
+        ====================================================
+        CONTACT PAGE STYLES (Blue/Black/White Theme)
+        ====================================================
+        */
+        .contact-hero-section {
+            background-color: var(--color-primary); /* Brand Blue */
+            color: var(--color-panel);
+            padding: 80px 0;
+            text-align: center;
+            margin-bottom: 25px; 
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .contact-hero-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            border-bottom: none;
+            display: block;
+            padding-bottom: 0;
+            color: var(--color-panel);
+        }
+
+        .contact-hero-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .contact-layout {
+            display: flex;
+            gap: 25px;
+            align-items: stretch;
+        }
+
+        .form-panel {
+            flex: 2; /* Form takes more space */
+            background: var(--color-panel);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid var(--color-border);
+        }
+
+        .info-panel {
+            flex: 1; /* Info section takes less space */
+            background-color: var(--color-text-dark); /* Dark Panel */
+            color: var(--color-panel);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            color: var(--color-primary); /* Blue Title */
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--color-primary);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .info-panel .panel-title {
+            color: var(--color-panel);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-text-dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: var(--color-bg);
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 5px rgba(4, 83, 255, 0.3);
+        }
+
+        .btn-submit {
+            background-color: var(--color-primary);
+            color: var(--color-panel);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--light-blue); /* A slightly darker blue for hover */
+        }
+
+        /* Info Panel Details */
+        .info-box {
+            margin-bottom: 30px;
+        }
+
+        .info-box i {
+            font-size: 1.8em;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+
+        .info-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .info-box p, .contact-detail {
+            color: #a0a0a0;
+            font-size: 0.95rem;
+        }
+
+        .contact-detail {
+            font-weight: 600;
+            color: var(--color-primary);
+            display: block;
+            margin-top: 5px;
+        }
+
+        .info-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+            transition: color 0.3s;
+        }
+
+        .info-link:hover {
+            color: var(--color-panel);
+        }
+
+        .social-media {
+            margin-top: 20px;
+        }
+
+        .social-icon {
+            color: var(--color-panel);
+            background-color: var(--color-primary);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1em;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .social-icon:hover {
+            background-color: var(--light-blue);
+        }
+
+        /* --- Flashed Message Styles --- */
+        .flash-container { list-style: none; padding: 0; margin-bottom: 1rem; }
+        .flash-message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem; font-weight: 600; }
+        .flash-success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+        .flash-error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+        /* ------------------------------- */
+
+        /* Mobile Responsiveness */
+        @media (max-width: 800px) {
+            .contact-layout {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="logo-group">
+            <div class="pd-logo"><img src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}" alt="PrimeDrew Logo" id="imglogo"></div>
+            <div class="logo-name">PrimeDrew</div>
+        </div>
+
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" />
+        <label for="nav-toggle" class="hamburger" aria-label="Toggle navigation" role="button" tabindex="0">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </label>
+
+        <nav class="nav" aria-label="Primary">
+            <ul class="nav-list">
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('about_page') }}">About Us</a></li>
+                <li><a href="{{ url_for('contact_page') }}" style="background: rgba(255, 255, 255, .1); border-radius: 6px;">Contact Us</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="contact-hero-section">
+            <div class="container">
+                <h1>Got a Question? Let's Talk.</h1>
+                <p>We are here to help **Hosts** and **Renters** get the most out of PrimeDrew.</p>
+            </div>
+        </section>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flash-container">
+            {% for category, message in messages %}
+              <li class="flash-message flash-{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <div class="contact-layout">
+            
+            <section class="form-panel">
+                <h2 class="panel-title">Send Us A Message</h2>
+                <form action="{{ url_for('submit_contact_form') }}" method="POST" class="contact-form">
+                    <div class="form-group">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Your Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a Subject...</option>
+                            <option value="Host Inquiry">Host Inquiry</option>
+                            <option value="Rental Help">Rental Assistance</option>
+                            <option value="Technical Issue">Technical Issue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Your Message</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Send Message</button>
+                </form>
+            </section>
+
+            <section class="info-panel">
+                <h2 class="panel-title">Get Direct Support</h2>
+                
+                <div class="info-box">
+                    <i class="fas fa-question-circle"></i>
+                    <h3>Support Center</h3>
+                    <p>For instant answers, check our comprehensive FAQ and guide library.</p>
+                    <a href="#" class="info-link">Visit Help Center <i class="fas fa-arrow-right"></i></a>
+                </div>
+
+                <div class="info-box">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Email Support</h3>
+                    <p>For detailed inquiries, our team responds within 24 hours.</p>
+                    <span class="contact-detail">support@primedrew.com</span>
+                </div>
+                
+                <div class="social-media">
+                    <h3>Connect With Us</h3>
+                    <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

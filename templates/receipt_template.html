@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Receipt #{{ booking.id }}</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .receipt-container { 
+            max-width: 700px; margin: 0 auto; background-color: #fff; padding: 30px; 
+            border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .header { text-align: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { color: #007bff; margin: 0; font-size: 28px; }
+        .header p { color: #555; font-size: 14px; margin-top: 5px; }
+
+        .section-title { 
+            font-size: 1.2em; color: #333; border-left: 4px solid #007bff; padding-left: 10px; 
+            margin-top: 25px; margin-bottom: 15px; font-weight: bold; 
+        }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 30px; font-size: 0.95em; }
+        .detail-item { padding: 5px 0; }
+        .detail-item span { color: #6c757d; display: block; }
+        .detail-item strong { color: #333; display: block; font-weight: 600; }
+
+        /* Pricing Table */
+        .pricing-table { width: 100%; margin-top: 20px; border: 1px solid #eee; border-radius: 4px; }
+        .pricing-table td { padding: 10px 15px; border-bottom: 1px dashed #eee; }
+        .pricing-table .label { color: #6c757d; }
+        .pricing-table .value { text-align: right; font-weight: 500; }
+        .pricing-table .total-row td { 
+            font-size: 1.1em; font-weight: bold; color: #007bff; 
+            background-color: #f0f8ff; border-top: 2px solid #007bff; border-bottom: none;
+        }
+
+        /* Handover Instructions */
+        .handover-box { 
+            background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 6px; 
+            border: 1px solid #ffeeba; margin-top: 25px;
+        }
+        .handover-box strong { font-weight: 700; color: #333; }
+
+        .print-btn {
+            display: block; width: 100%; padding: 10px; background-color: #28a745; color: white; 
+            text-align: center; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px;
+            font-size: 16px; text-decoration: none;
+        }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .receipt-container { box-shadow: none; border: none; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="header">
+            <h1>PRIME DREW</h1>
+            <p>Official Booking Receipt</p>
+        </div>
+
+        {% if is_cancellation_refund %}
+            <div style="text-align: center; color: #dc3545; font-weight: bold; margin-bottom: 15px;">
+                *** CANCELLATION REFUND RECEIPT ***
+            </div>
+        {% endif %}
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <span>Receipt / Booking ID:</span>
+                <strong>#{{ booking.id }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Date Booked:</span>
+                <strong>{{ booking.booked_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Payment ID:</span>
+                <strong>{{ booking.payment_id or 'N/A' }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Status:</span>
+                <strong style="color: {{ '#28a745' if booking.status == 'Confirmed' else '#dc3545' }};">{{ booking.status }}</strong>
+            </div>
+        </div>
+        
+        <div class="section-title">Ride Details</div>
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <span>Vehicle:</span>
+                <strong>{{ vehicle.name }} ({{ vehicle.brand }})</strong>
+            </div>
+            <div class="detail-item">
+                <span>Type/Fuel:</span>
+                <strong>{{ vehicle.type }} / {{ vehicle.fuel }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Pickup/Drop Location:</span>
+                <strong>{{ vehicle.sub_city }}, {{ vehicle.city }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Duration:</span>
+                <strong>{{ billed_hours }} Hours</strong>
+            </div>
+        </div>
+
+        <div class="section-title">Pricing Breakdown</div>
+        
+        <table class="pricing-table">
+            <tr>
+                <td class="label">Rental Base Price ({{ billed_hours }} hrs)</td>
+                <td class="value">₹{{ "{:,.0f}".format(subtotal_base) }}</td>
+            </tr>
+            <tr>
+                <td class="label">GST (18%)</td>
+                <td class="value">₹{{ "{:,.0f}".format(gst) }}</td>
+            </tr>
+            {% if booking.deposit_amount > 0 %}
+            <tr>
+                <td class="label">Refundable Deposit</td>
+                <td class="value">₹{{ "{:,.0f}".format(deposit) }}</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td>TOTAL AMOUNT PAID</td>
+                <td>₹{{ "{:,.0f}".format(final_price) }}</td>
+            </tr>
+        </table>
+        
+        <div class="handover-box" style="background-color: {{ '#d4edda' if booking.deposit_refund_status == 'Processed' else '#fff3cd' }}">
+            {% if booking.deposit_refund_status == 'Processed' %}
+                <i class="fas fa-check-circle" style="color: #155724;"></i> 
+                <strong>Deposit Refund:</strong> ₹{{ "{:,.0f}".format(deposit) }} has been **PROCESSED** (Cleared). It should reflect in your account soon.
+            {% elif booking.deposit_refund_status == 'Pending' %}
+                <i class="fas fa-clock" style="color: #856404;"></i> 
+                <strong>Deposit Status:</strong> ₹{{ "{:,.0f}".format(deposit) }} is **PENDING** refund upon safe vehicle return Deposit will be transfer in your account in next 5 to 7 Working Days.
+            {% else %}
+                <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> 
+                <strong>Deposit Status:</strong> {{ booking.deposit_refund_status }}. Contact support for details.
+            {% endif %}
+        </div>
+        
+        <div class="section-title">Handover Information (Critical)</div>
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <span>Host Name:</span>
+                <strong>{{ host.first_name }} {{ host.last_name }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Host Contact:</span>
+                <strong>{{ host.phone }}</strong>
+            </div>
+            <div class="detail-item">
+                <span>Vehicle Plate Number:</span>
+                <strong>[Host to provide or vehicle details page]</strong>
+            </div>
+            <div class="detail-item">
+                <span>Pickup Instructions:</span>
+                <strong>Meet at {{ vehicle.sub_city }} (Contact Host 1 Hour Prior)</strong>
+            </div>
+        </div>
+
+        <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print Receipt</button>
+    </div>
+</body>
+</html>

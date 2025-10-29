@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PrimeDrew | Edit Ride: {{ vehicle.name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='vehicle_search_styles.css') }}" />
+    <style>
+      .host-form-container { max-width: 1000px; margin: 40px auto; padding: 20px; background-color: #f7f9fb; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+      .host-form-container h2 { text-align: center; color: #1a1a1a; margin-bottom: 5px; font-size: 2em; }
+      .host-form-container .subtitle { text-align: center; color: #6c757d; margin-bottom: 30px; }
+      .form-section { background-color: #ffffff; padding: 30px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e0e0e0; }
+      .section-header { display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
+      .section-header h3 { margin: 0; color: #007bff; font-size: 1.5em; }
+      .section-header i { font-size: 1.5em; margin-right: 15px; color: #007bff; }
+      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+      .form-group { margin-bottom: 0; }
+      .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #343a40; }
+      .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; transition: border-color 0.3s; }
+      .form-group input:focus, .form-group select:focus { border-color: #007bff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); outline: none; }
+      .checkbox-group { display: flex; flex-wrap: wrap; gap: 20px; }
+      .checkbox-group label { display: flex; align-items: center; font-weight: normal; cursor: pointer; }
+      .checkbox-group input[type="checkbox"] { margin-right: 8px; transform: scale(1.1); }
+      .form-actions { padding: 20px 30px; background-color: #e9ecef; border-radius: 8px; text-align: right; margin-top: 30px; }
+      .btn-submit { padding: 12px 30px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: background-color 0.3s; }
+      .btn-submit:hover { background-color: #218838; }
+      .alert { padding: 15px; border-radius: 6px; margin-bottom: 25px; text-align: center; font-weight: bold; }
+      .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+      .alert-danger { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+      .main-content { padding-top: 20px; padding-bottom: 40px; }
+      .current-image-preview { margin-top: 15px; }
+      .current-image-preview img { max-width: 150px; border-radius: 8px; border: 2px solid #ddd; }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <div class="host-form-container">
+            <h2>Edit Your Ride</h2>
+            <p class="subtitle">Update the details for: <strong>{{ vehicle.name }}</strong></p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('edit_vehicle', vehicle_id=vehicle.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-motorcycle"></i>
+                        <h3>Basic Details</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Vehicle Name</label>
+                            <input type="text" id="name" name="name" required value="{{ vehicle.name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="brand">Brand / Manufacturer</label>
+                            <input type="text" id="brand" name="brand" required value="{{ vehicle.brand }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="type">Vehicle Category</label>
+                            <select id="type" name="type" required>
+                                <option value="Scooter" {% if vehicle.type == 'Scooter' %}selected{% endif %}>Scooter</option>
+                                <option value="Bike" {% if vehicle.type == 'Bike' %}selected{% endif %}>Bike</option>
+                                <option value="Car" {% if vehicle.type == 'Car' %}selected{% endif %}>Car</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-cogs"></i>
+                        <h3>Specs & Pricing</h3>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="base_price">Base Price (₹ per hour)</label>
+                            <input type="number" id="base_price" name="base_price" min="10" step="0.5" required value="{{ vehicle.base_price }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="fuel">Powertrain Type</label>
+                            <select id="fuel" name="fuel" required>
+                                <option value="Petrol" {% if vehicle.fuel == 'Petrol' %}selected{% endif %}>Petrol ⛽</option>
+                                <option value="Electric" {% if vehicle.fuel == 'Electric' %}selected{% endif %}>Electric ⚡</option>
+                                <option value="Diesel" {% if vehicle.fuel == 'Diesel' %}selected{% endif %}>Diesel</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gear">Transmission</label>
+                            <select id="gear" name="gear" required>
+                                <option value="Manual" {% if vehicle.gear == 'Manual' %}selected{% endif %}>Manual (Geared)</option>
+                                <option value="CVT" {% if vehicle.gear == 'CVT' %}selected{% endif %}>Automatic (CVT/Gearless)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="kms_per_unit">Mileage / Range (km/unit)</label>
+                            <input type="number" id="kms_per_unit" name="kms_per_unit" min="10" required value="{{ vehicle.kms_per_unit }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="specification">Specification</label>
+                            <input type="text" id="specification" name="specification" placeholder="e.g., 7 Seater, ABS Brakes" maxlength="250" value="{{ vehicle.specification or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-image"></i>
+                        <h3>Image & Value-Adds</h3>
+                    </div>
+                    <div class="form-group">
+                        <label for="vehicle_image">Upload New Image (Optional)</label>
+                        <input type="file" id="vehicle_image" name="vehicle_image" accept="image/png, image/jpeg, image/webp">
+                        <small style="color: #6c757d">Leave this empty to keep the current image.</small>
+                        <div class="current-image-preview">
+                            <p>Current Image:</p>
+                            <img src="{{ vehicle.image_url }}" alt="Current image of {{ vehicle.name }}">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 25px">
+                        <label>Premium Features</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="features" value="Helmet" {% if 'Helmet' in vehicle.features %}checked{% endif %}> Free Helmet</label>
+                            <label><input type="checkbox" name="features" value="Doorstep" {% if 'Doorstep' in vehicle.features %}checked{% endif %}> Doorstep Delivery</label>
+                            <label><input type="checkbox" name="features" value="Unlimited" {% if 'Unlimited' in vehicle.features %}checked{% endif %}> Unlimited KMs</label>
+                            <label><input type="checkbox" name="features" value="QuickID" {% if 'QuickID' in vehicle.features %}checked{% endif %}> Quick KYC Support</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('host_dashboard') }}" style="margin-right: 15px; color: #6c757d;">Cancel</a>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

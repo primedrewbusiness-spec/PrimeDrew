@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PrimeDrew | Host: Dashboard & List Ride</title>
+    <meta
+      name="description"
+      content="Host portal for managing and listing vehicles for rent on PrimeDrew."
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='vehicle_search_styles.css') }}"
+    />
+
+    <style>
+      /* Existing styles remain unchanged... */
+      .host-form-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #f7f9fb;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .host-form-container h2 {
+        text-align: center;
+        color: #1a1a1a;
+        margin-bottom: 5px;
+        font-size: 2em;
+      }
+
+      .host-form-container .subtitle {
+        text-align: center;
+        color: #6c757d;
+        margin-bottom: 30px;
+      }
+
+      .form-section {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #007bff;
+      }
+
+      .section-header h3 {
+        margin: 0;
+        color: #007bff;
+        font-size: 1.5em;
+      }
+
+      .section-header i {
+        font-size: 1.5em;
+        margin-right: 15px;
+        color: #007bff;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+      }
+
+      .form-group {
+        margin-bottom: 0;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #343a40;
+      }
+
+      .form-group
+        input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        outline: none;
+      }
+
+      /* File Input Styling */
+      .form-group input[type="file"] {
+        padding: 10px;
+      }
+
+      /* Checkbox/Radio Styling */
+      .checkbox-group,
+      .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .checkbox-group label,
+      .radio-group label {
+        display: flex;
+        align-items: center;
+        font-weight: normal;
+        cursor: pointer;
+        color: #495057;
+      }
+
+      .checkbox-group input[type="checkbox"],
+      .radio-group input[type="radio"] {
+        margin-right: 8px;
+        transform: scale(1.1);
+      }
+
+      /* Action Button Styling */
+      .form-actions {
+        padding: 20px 30px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+        text-align: right;
+        margin-top: 30px;
+      }
+
+      .btn-submit {
+        padding: 12px 30px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+
+      .btn-submit:hover {
+        background-color: #218838;
+      }
+
+      .error-message,
+      .alert {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 25px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .alert-info {
+        color: #0c5460;
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+      }
+
+      .main-content {
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+
+      /* --- HOST DASHBOARD STYLES --- */
+      .vehicle-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .vehicle-card-host {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .vehicle-details-host {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background-color: #f0f8ff;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .vehicle-details-host img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-right: 15px;
+      }
+
+      .vehicle-info-host h4 {
+        margin: 0 0 5px 0;
+        color: #1a1a1a;
+        font-size: 1.2em;
+      }
+
+      .vehicle-info-host p {
+        margin: 0;
+        font-size: 0.9em;
+        color: #6c757d;
+      }
+
+      /* --- STYLES FOR AVAILABILITY BUTTON --- */
+      .vehicle-actions-host {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px; /* NEW */
+        align-items: center; /* NEW */
+      }
+
+      .btn-toggle-availability {
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: bold;
+        transition: all 0.2s;
+        border: none;
+      }
+      .btn-toggle-availability.unavailable {
+        background-color: #df1342;
+        color: white;
+      }
+      .btn-toggle-availability.available {
+        background-color: #28a745;
+        color: white;
+      }
+      .btn-toggle-availability.available:hover {
+        background-color: #218838;
+      }
+      
+      /* --- NEW: EDIT BUTTON STYLES --- */
+      .btn-edit-vehicle {
+        display: inline-block;
+        padding: 6px 12px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.9em;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+      .btn-edit-vehicle:hover {
+        background-color: #0056b3;
+      }
+      .btn-edit-vehicle.disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      /* --- END NEW STYLES --- */
+
+      .booking-list-host {
+        padding: 15px;
+        background-color: #ffffff;
+      }
+
+      .booking-list-host h5 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #007bff;
+        font-size: 1.1em;
+        border-bottom: 1px dashed #ced4da;
+        padding-bottom: 5px;
+      }
+
+      .booking-item-host {
+        padding: 8px 0;
+        border-bottom: 1px dotted #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95em;
+      }
+
+      .booking-item-host:last-child {
+        border-bottom: none;
+      }
+
+      .booking-dates-host {
+        font-weight: 600;
+        color: #28a745;
+      }
+
+      .no-bookings {
+        color: #dc3545;
+        text-align: center;
+        font-style: italic;
+        padding: 10px;
+      }
+
+      /* --- HOST INTERNAL NAV STYLES (NEW) --- */
+      .host-nav {
+        background-color: #e9ecef;
+        padding: 10px 20px;
+        margin-bottom: 25px;
+        border-radius: 8px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .host-nav-links a {
+        color: #343a40;
+        text-decoration: none;
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+      .host-nav-links a:hover, .host-nav-links a.active {
+        background-color: #007bff;
+        color: white;
+      }
+      .tier-status {
+        font-size: 0.9em;
+        font-weight: bold;
+        color: #007bff;
+      }
+      /* --- END HOST INTERNAL NAV STYLES --- */
+
+
+      @media (max-width: 600px) {
+        .host-form-container {
+          margin: 20px 10px;
+          padding: 15px;
+        }
+        .form-section {
+          padding: 20px;
+        }
+        .form-actions {
+          text-align: center;
+        }
+        .btn-submit {
+          width: 100%;
+        }
+        .vehicle-details-host {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .vehicle-details-host img {
+          margin-right: 0;
+          margin-bottom: 10px;
+        }
+        .host-nav {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+      }
+      /* --- NEW MEDIA QUERY FOR SMALLER SCREENS (310px to 400px) --- */
+      @media (max-width: 400px) {
+        .form-group
+          input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+        .form-group select,
+        .form-group textarea {
+          padding: 10px; /* Reduced padding from 12px */
+          font-size: 0.95em; /* Slightly smaller font for better fit */
+        }
+        .form-group label {
+          font-size: 0.9em;
+          width: 9rem;
+        }
+        .form-group,
+        .form-grid,
+        #name,
+        #brand,
+        #type,
+        #city,
+        #base_price,
+        #fuel,
+        #vehicle_image,
+        #gear,
+        #kms_per_unit {
+          width: 12rem;
+          height: 3.5rem;
+        }
+        .pd-logo img {
+          margin-left: -2rem;
+        }
+      }
+
+      /* Hamburger & Mobile Nav Additions */
+      .site-header {
+        background-color: #000;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        position: relative;
+        height: 40px;
+      }
+
+      .logo-group {
+        display: flex;
+        align-items: center;
+      }
+
+      .pd-logo img {
+        height: 40px;
+        margin-right: 10px;
+      }
+
+      .logo-name {
+        font-size: 28px;
+        font-family: Arial, sans-serif;
+        font-weight: 900;
+        color: #0453ff;
+      }
+
+      .nav {
+        display: flex;
+      }
+
+      .nav-list {
+        list-style: none;
+        display: flex;
+        gap: 20px;
+        margin: 0;
+        padding: 0;
+      }
+
+      .nav-list li a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      /* Hamburger button styling */
+      .hamburger {
+        display: none;
+        font-size: 1.8em;
+        cursor: pointer;
+        color: white;
+        background: none;
+        border: none;
+      }
+
+      /* Mobile nav overlay */
+      .mobile-menu {
+        display: none;
+        position: absolute;
+        top: 60px;
+        right: 10px;
+        background: #111;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        padding: 15px 20px;
+        z-index: 1000;
+      }
+
+      .mobile-menu a {
+        display: block;
+        color: white;
+        padding: 10px 0;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .mobile-menu a:hover {
+        color: #00bfff;
+      }
+
+      .mobile-menu.show {
+        display: block;
+      }
+
+      /* Show hamburger on small screens */
+      @media (max-width: 981px) {
+        .nav {
+          display: none;
+        }
+        .hamburger {
+          display: block;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="logo-group">
+        <div class="pd-logo">
+          <img
+            src="{{ url_for('static', filename='images/Minimalist PD Car Logo.png') }}"
+            alt="PrimeDrew Logo"
+            id="imglogo"
+          />
+        </div>
+        <div class="logo-name">PrimeDrew</div>
+      </div>
+
+      <button class="hamburger" id="hamburger">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <nav class="nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('search_page') }}"> Find Rides</a></li>
+          {% if session.get('logged_in') %}
+          <li><a href="{{ url_for('host_dashboard') }}"> Dashboard</a></li>
+          <li><a href="{{ url_for('logout') }}">Logout</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="mobile-menu" id="mobileMenu">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('search_page') }}">Find Rides</a>
+        {% if session.get('logged_in') %}
+        <a href="{{ url_for('host_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <script>
+      // Hamburger toggle script (unchanged)
+      const hamburger = document.getElementById("hamburger");
+      const mobileMenu = document.getElementById("mobileMenu");
+
+      hamburger.addEventListener("click", () => {
+        mobileMenu.classList.toggle("show");
+        hamburger.innerHTML = mobileMenu.classList.contains("show")
+          ? '<i class="fas fa-times"></i>' // Close icon
+          : '<i class="fas fa-bars"></i>'; // Hamburger icon
+      });
+    </script>
+
+    <main class="main-content">
+      <div class="host-form-container">
+        <h2>Host Dashboard</h2>
+        <p class="subtitle">
+          Welcome, {{ user.first_name if user else 'Host' }}. Manage your
+          listings and view bookings.
+        </p>
+
+        {# This block will now correctly display flashed messages #} {% with
+        messages = get_flashed_messages(with_categories=true) %} {% if messages
+        %} {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% endwith %}
+
+        <div class="host-nav">
+          <div class="host-nav-links">
+            <a href="{{ url_for('host_dashboard') }}" class="active">
+              <i class="fas fa-list-alt"></i> Listings & Bookings
+            </a>
+            <a href="{{ url_for('host_earnings_view') }}">
+              <i class="fas fa-chart-line"></i> My Earnings
+            </a>
+            <a href="{{ url_for('set_host_tier') }}">
+              <i class="fas fa-wallet"></i> Earning Tier ({{ user.commission_tier if user.commission_tier else 70 }}%)
+            </a>
+          </div>
+          <span class="tier-status">
+            <i class="fas fa-star"></i> Current Payout Rate: {{ user.commission_tier if user.commission_tier else 70 }}%
+          </span>
+        </div>
+        <div class="form-section" style="border-left: 5px solid #007bff; margin-bottom: 25px;">
+            <div class="section-header" style="border-bottom: none;">
+                <i class="fas fa-signal"></i>
+                <h3>Market Demand Insights ({{ user.city }})</h3>
+                <p style="margin-left: auto; color: #6c757d; font-size: 0.9em;">(Based on last 30 days)</p>
+            </div>
+            
+            <div style="padding: 10px 0;">
+                <p style="font-size: 1.1em; font-weight: bold; color: #343a40;">
+                    <i class="fas fa-chart-line" style="color: {% if demand_insights.action == 'red' %}#dc3545{% else %}#28a745{% endif %};"></i> 
+                    Overall Recommendation: 
+                    <span style="color: {% if demand_insights.action == 'red' %}#dc3545{% else %}#28a745{% endif %}">
+                        {{ demand_insights.advice }}
+                    </span>
+                </p>
+                
+                <p style="color: #6c757d;">Total Recent Bookings Analyzed: <strong>{{ demand_insights.total_bookings }}</strong></p>
+                
+                {% if demand_insights.type_data %}
+                    <div style="margin-top: 15px; background: #f0f0f0; padding: 15px; border-radius: 5px;">
+                        <p style="font-weight: bold; margin-bottom: 5px;">Demand Breakdown by Type:</p>
+                        <ul style="list-style: none; padding: 0;">
+                            {% for data in demand_insights.type_data %}
+                                <li style="margin-bottom: 5px;">
+                                    <span style="display: inline-block; width: 100px;">{{ data.type }}:</span> 
+                                    <strong style="color: #007bff;">{{ data.count }} Bookings</strong>
+                                    {% if data.type == demand_insights.most_demanded_type %}
+                                        <span style="color: #ffc107; margin-left: 10px;"><i class="fas fa-star"></i> (Highest Demand)</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="form-section">
+          <div class="section-header">
+            <i class="fas fa-car"></i>
+            <h3>Your Listed Rides ({{ listed_vehicles | length }} Vehicles)</h3>
+          </div>
+
+          <div class="vehicle-list">
+            {% if listed_vehicles %} {% for vehicle in listed_vehicles %}
+            <div class="vehicle-card-host">
+              <div class="vehicle-details-host">
+                <img
+                  src="{{ vehicle.image_url }}"
+                  alt="{{ vehicle.name }} image"
+                />
+                <div class="vehicle-info-host">
+                  <h4>
+                    {{ vehicle.name }}
+                    <small
+                      >({{ vehicle.brand }} / ₹{{ vehicle.base_price | round(2)
+                      }}/hour)</small
+                    >
+                    {% if vehicle.is_available %}
+                    <span
+                      style="
+                        color: #28a745;
+                        font-size: 0.8em;
+                        font-weight: bold;
+                      "
+                      >(Available)</span
+                    >
+                    {% else %}
+                    <span
+                      style="
+                        color: #dc3545;
+                        font-size: 0.8em;
+                        font-weight: bold;
+                      "
+                      >(Unavailable)</span
+                    >
+                    {% endif %}
+                  </h4>
+                  <p>
+                    ID: {{ vehicle.vehicle_id_code }} | Location: {{
+                    vehicle.city }}
+                    {% if vehicle.sub_city %}, {{ vehicle.sub_city }}{% endif %}
+                    | Type: {{ vehicle.type }}
+                  </p>
+                  <p>
+                    Features: {{ vehicle.features | replace(",", ", ") if
+                    vehicle.features else "None" }}
+                  </p>
+
+                  <div class="vehicle-actions-host">
+                    <form
+                      action="{{ url_for('toggle_availability', vehicle_id=vehicle.id) }}"
+                      method="POST"
+                      style="display: inline"
+                    >
+                      {% if vehicle.is_available %}
+                      <button
+                        type="submit"
+                        class="btn-toggle-availability unavailable"
+                      >
+                        <i class="fas fa-power-off"></i> Make Unavailable
+                      </button>
+                      {% else %}
+                      <button
+                        type="submit"
+                        class="btn-toggle-availability available"
+                      >
+                        <i class="fas fa-power-off"></i> Make Available
+                      </button>
+                      {% endif %}
+                    </form>
+                    
+                    <a href="{{ url_for('edit_vehicle', vehicle_id=vehicle.id) }}"
+                       class="btn-edit-vehicle {% if vehicle.has_future_booking %}disabled{% endif %}"
+                       {% if vehicle.has_future_booking %}
+                         title="Cannot edit: Vehicle has upcoming bookings."
+                         onclick="return false;"
+                       {% endif %}>
+                       <i class="fas fa-edit"></i> Edit
+                    </a>
+                  </div>
+                  </div>
+              </div>
+
+              <div class="booking-list-host">
+                <h5>Confirmed Bookings ({{ vehicle.bookings | length }})</h5>
+                {% if vehicle.bookings %} {% for booking in vehicle.bookings %}
+                <div class="booking-item-host">
+                  <span
+                    >Booking #{{ booking.id }} (Customer: {{
+                    booking.customer.first_name if booking.customer else "N/A"
+                    }})</span
+                  >
+                  <span class="booking-dates-host">
+                    <i class="far fa-calendar-alt"></i> {{
+                    booking.start_date.strftime('%Y-%m-%d %H:%M') }} → {{
+                    booking.end_date.strftime('%Y-%m-%d %H:%M') }}
+                  </span>
+                </div>
+                {% endfor %} {% else %}
+                <p class="no-bookings">No confirmed bookings yet.</p>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <div class="no-results-card">
+              <i
+                class="fas fa-exclamation-circle"
+                style="color: #007bff; margin-right: 10px"
+              ></i>
+              You have not listed any vehicles yet. Use the form below to list
+              your first ride!
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <form
+          action="{{ url_for('host_dashboard') }}"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <div class="form-section">
+            <div class="section-header">
+              <i class="fas fa-motorcycle"></i>
+              <h3>List Your Ride for Rent</h3>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="name"
+                  >Vehicle Name (e.g., Pulsar 150)</label
+                >
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  placeholder="Full model name"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="brand">Brand / Manufacturer</label>
+                <input
+                  type="text"
+                  id="brand"
+                  name="brand"
+                  required
+                  placeholder="e.g., Bajaj, Honda"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="type">Vehicle Category</label>
+                <select id="type" name="type" required>
+                  <option value="Scooter">Scooter</option>
+                  <option value="Bike">Bike</option>
+                  <option value="Car">Car</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="city">Rental City</label>
+                <select id="city" name="city" required>
+                  <option value="">-- Select City --</option>
+                  <option value="Pune">Pune</option>
+                  <option value="Mumbai">Mumbai</option>
+                  <option value="Bengaluru">Bengaluru</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Delhi">Delhi</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="subCityGroup" style="display: none;">
+                <label for="sub_city">Area / Sub-Location</label>
+                <select id="sub_city" name="sub_city">
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-header">
+              <i class="fas fa-cogs"></i>
+              <h3>Specs & Pricing</h3>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="base_price">Base Price (₹ per hour)</label>
+                <input
+                  type="number"
+                  id="base_price"
+                  name="base_price"
+                  min="10"
+                  step="0.5"
+                  required
+                  placeholder="Minimum ₹10"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="fuel">Powertrain Type</label>
+                <select id="fuel" name="fuel" required>
+                  <option value="Petrol">Petrol ⛽</option>
+                  <option value="Electric">Electric ⚡</option>
+                  <option value="Diesel">Diesel</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="gear">Transmission</label>
+                <select id="gear" name="gear" required>
+                  <option value="Manual">Manual (Geared)</option>
+                  <option value="CVT">Automatic (CVT/Gearless)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="kms_per_unit">Mileage / Range (km/unit)</label>
+                <input
+                  type="number"
+                  id="kms_per_unit"
+                  name="kms_per_unit"
+                  min="10"
+                  value="50"
+                  required
+                  placeholder="e.g., 45 (km/L) or 80 (km/charge)"
+                />
+              </div>
+
+              <div class="form-group">
+                  <label for="specification">Specification (e.g., 5 Seater)</label>
+                  <input
+                      type="text"
+                      id="specification"
+                      name="specification"
+                      placeholder="e.g., 7 Seater, ABS Brakes"
+                      maxlength="250"
+                  />
+              </div>
+
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-header">
+              <i class="fas fa-image"></i>
+              <h3>Image & Value-Adds</h3>
+            </div>
+
+            <div class="form-group">
+              <label for="vehicle_image">Upload Vehicle Image</label>
+              <input
+                type="file"
+                id="vehicle_image"
+                name="vehicle_image"
+                accept="image/png, image/jpeg, image/webp"
+                required
+              />
+              <small style="color: #6c757d"
+                >Select a file from your device (JPG, PNG, or WebP).</small
+              >
+            </div>
+            <div class="form-group" style="margin-top: 25px">
+              <label>Premium Features (Customers search for these!)</label>
+              <div class="checkbox-group">
+                <label
+                  ><input type="checkbox" name="features" value="Helmet" /> Free
+                  Helmet</label
+                >
+                <label
+                  ><input type="checkbox" name="features" value="Doorstep" />
+                  Doorstep Delivery</label
+                >
+                <label
+                  ><input type="checkbox" name="features" value="Unlimited" />
+                  Unlimited KMs</label
+                >
+                <label
+                  ><input type="checkbox" name="features" value="QuickID" />
+                  Quick KYC Support</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-submit">
+              <i class="fas fa-check-circle"></i> Submit Vehicle for Listing
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <script>
+      const subCityMap = JSON.parse('{{ sub_city_map_json | safe }}');
+      const citySelect = document.getElementById('city');
+      const subCityGroup = document.getElementById('subCityGroup');
+      const subCitySelect = document.getElementById('sub_city');
+
+      function updateSubCities() {
+          const selectedCity = citySelect.value;
+          const subCities = subCityMap[selectedCity];
+
+          subCitySelect.innerHTML = '<option value="">-- Select Area --</option>';
+
+          if (subCities && subCities.length > 0) {
+              subCities.forEach(subCity => {
+                  const option = document.createElement('option');
+                  option.value = subCity;
+                  option.textContent = subCity;
+                  subCitySelect.appendChild(option);
+              });
+              subCityGroup.style.display = 'block';
+              subCitySelect.required = true;
+          } else {
+              subCityGroup.style.display = 'none';
+              subCitySelect.required = false;
+          }
+      }
+
+      citySelect.addEventListener('change', updateSubCities);
+      document.addEventListener('DOMContentLoaded', updateSubCities);
+    </script>
+  </body>
+</html>

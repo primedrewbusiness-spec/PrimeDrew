@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Prime Drew</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Montserrat:wght=700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="main-wrapper">
+
+        <div class="visual-pane">
+            <div class="logo-box">
+                <span class="logo-icon">🚗💨</span>
+                <h1>PrimeDrew</h1>
+                <p>Your journey is our priority. Log in for unforgettable rides.</p>
+            </div>
+            <div class="decor-circle circle-1"></div>
+            <div class="decor-circle circle-2"></div>
+        </div>
+
+        <div class="form-pane">
+            <div class="login-box">
+                <p class="small-link">New to Prime Drew? <a href="{{ url_for('register_page') }}">Create Account</a></p>
+
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Enter your mobile number or email and password to continue.</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert-{{ category | replace('error', 'danger') | replace('info', 'primary') | replace('warning', 'secondary') }}" style="padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white; background-color: {% if category == 'error' %}#dc3545{% elif category == 'success' %}#28a745{% else %}#007bff{% endif %};">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% if error %}
+                <div class="alert-error" style="padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white; background-color: #dc3545;">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form action="{{ url_for('login') }}" method="POST" class="login-form">
+                    <div class="form-group">
+                        <label for="login_id"><i class="fas fa-user-circle"></i> Mobile Number or Email</label>
+                        <input 
+                            id="login_id" 
+                            name="login_id" 
+                            type="text" 
+                            required 
+                            placeholder="e.g., 9876543210 or your@email.com"
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <div class="password-header">
+                            <label for="password"><i class="fas fa-lock"></i> Password</label>
+                           <a href="{{ url_for('forgot_password_page') }}" class="forgot-link">Forgot password?</a>
+                        </div>
+                        
+                        <div class="password-toggle-group">
+                            <input 
+                                id="password" 
+                                name="password" 
+                                type="password" 
+                                required 
+                                placeholder="••••••••" 
+                                autocomplete="current-password"
+                            >
+                            <span class="password-toggle" onclick="togglePasswordVisibility('password')">
+                                <i id="toggleIcon" class="fas fa-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        LOG IN <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="social-divider">
+                    <span>OR CONTINUE WITH</span>
+                </div>
+
+                <div class="social-logins">
+                    <button class="btn-social google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    <button class="btn-social facebook">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function togglePasswordVisibility(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleSpan = passwordInput.nextElementSibling;
+            const icon = toggleSpan.querySelector('#toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye'); 
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash'); 
+            }
+        }
+        
+        // Ensure that the viewport height is correctly applied on mobile devices
+        const setVh = () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        window.addEventListener('resize', setVh);
+        setVh();
+    </script>
+</body>
+</html>
